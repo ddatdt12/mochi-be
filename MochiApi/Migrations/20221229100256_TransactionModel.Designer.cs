@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MochiApi.Models;
 
@@ -10,56 +11,15 @@ using MochiApi.Models;
 namespace MochiApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221229100256_TransactionModel")]
+    partial class TransactionModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "6.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
-
-            modelBuilder.Entity("MochiApi.Models.Budget", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LimitAmount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("SpentAmount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WalletId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("WalletId");
-
-                    b.ToTable("Budget");
-                });
 
             modelBuilder.Entity("MochiApi.Models.Category", b =>
                 {
@@ -69,10 +29,6 @@ namespace MochiApi.Migrations
 
                     b.Property<int>("CreatorId")
                         .HasColumnType("int");
-
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -93,65 +49,6 @@ namespace MochiApi.Migrations
                     b.ToTable("Category");
                 });
 
-            modelBuilder.Entity("MochiApi.Models.Event", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int?>("WalletId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("WalletId");
-
-                    b.ToTable("Event");
-                });
-
-            modelBuilder.Entity("MochiApi.Models.Settings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Mode")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Settings");
-                });
-
             modelBuilder.Entity("MochiApi.Models.Transaction", b =>
                 {
                     b.Property<int>("Id")
@@ -164,13 +61,7 @@ namespace MochiApi.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
                     b.Property<int>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EventId")
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
@@ -185,8 +76,6 @@ namespace MochiApi.Migrations
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("CreatorId");
-
-                    b.HasIndex("EventId");
 
                     b.HasIndex("WalletId");
 
@@ -247,10 +136,6 @@ namespace MochiApi.Migrations
                     b.Property<int>("Balance")
                         .HasColumnType("int");
 
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("IsDefault")
                         .HasColumnType("tinyint(1)");
 
@@ -270,7 +155,6 @@ namespace MochiApi.Migrations
                         {
                             Id = 1,
                             Balance = 100000,
-                            Icon = "",
                             IsDefault = true,
                             Name = "Ví",
                             Type = 0
@@ -279,7 +163,6 @@ namespace MochiApi.Migrations
                         {
                             Id = 2,
                             Balance = 200000,
-                            Icon = "",
                             IsDefault = true,
                             Name = "Ví",
                             Type = 0
@@ -288,7 +171,6 @@ namespace MochiApi.Migrations
                         {
                             Id = 3,
                             Balance = 300000,
-                            Icon = "",
                             IsDefault = true,
                             Name = "Ví",
                             Type = 0
@@ -297,7 +179,6 @@ namespace MochiApi.Migrations
                         {
                             Id = 4,
                             Balance = 400000,
-                            Icon = "",
                             IsDefault = true,
                             Name = "Ví",
                             Type = 0
@@ -355,33 +236,6 @@ namespace MochiApi.Migrations
                         });
                 });
 
-            modelBuilder.Entity("MochiApi.Models.Budget", b =>
-                {
-                    b.HasOne("MochiApi.Models.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MochiApi.Models.User", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MochiApi.Models.Wallet", "Wallet")
-                        .WithMany()
-                        .HasForeignKey("WalletId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Wallet");
-                });
-
             modelBuilder.Entity("MochiApi.Models.Category", b =>
                 {
                     b.HasOne("MochiApi.Models.User", "Creator")
@@ -401,34 +255,6 @@ namespace MochiApi.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("MochiApi.Models.Event", b =>
-                {
-                    b.HasOne("MochiApi.Models.User", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MochiApi.Models.Wallet", "Wallet")
-                        .WithMany()
-                        .HasForeignKey("WalletId");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Wallet");
-                });
-
-            modelBuilder.Entity("MochiApi.Models.Settings", b =>
-                {
-                    b.HasOne("MochiApi.Models.User", "User")
-                        .WithOne("Settings")
-                        .HasForeignKey("MochiApi.Models.Settings", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("MochiApi.Models.Transaction", b =>
                 {
                     b.HasOne("MochiApi.Models.Category", "Category")
@@ -443,12 +269,6 @@ namespace MochiApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MochiApi.Models.Event", "Event")
-                        .WithMany("Transactions")
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MochiApi.Models.Wallet", "Wallet")
                         .WithMany()
                         .HasForeignKey("WalletId")
@@ -458,8 +278,6 @@ namespace MochiApi.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Creator");
-
-                    b.Navigation("Event");
 
                     b.Navigation("Wallet");
                 });
@@ -483,16 +301,8 @@ namespace MochiApi.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("MochiApi.Models.Event", b =>
-                {
-                    b.Navigation("Transactions");
-                });
-
             modelBuilder.Entity("MochiApi.Models.User", b =>
                 {
-                    b.Navigation("Settings")
-                        .IsRequired();
-
                     b.Navigation("WalletMembers");
                 });
 

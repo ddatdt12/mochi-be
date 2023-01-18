@@ -60,5 +60,33 @@ namespace MochiApi.Common
             EndDate = 1,
             NumberOfLessons = 2,
         }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum CategoryType
+        {
+            Standard,
+            Custom
+        }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum WalletType
+        {
+            Personal,
+            Group
+        }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum MemberRole
+        {
+            Admin,
+            Member
+        }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum Mode
+        {
+            Light,
+            Dark
+        }
     }
 }

@@ -14,17 +14,18 @@ namespace MochiApi.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<User>().HasData(new List<User>
-            {
-                new User{ Id = new Guid("d0ee9b2a-71cd-4d32-a778-0461ca0f64ff"), Email = "test@gmail.com", Password = "123123123"},
-                new User{ Id = new Guid("166dc3bd-54bb-4b8f-9de5-b6b5bcee3266"), Email = "test2@gmail.com", Password = "123123123"},
-                new User{ Id = new Guid("994dade2-d09e-4288-8734-840c863fc0ce"), Email = "test3@gmail.com", Password = "123123123"},
-                new User{ Id = new Guid("077f0ae7-b699-40a3-b22e-1f065705b8e3"), Email = "test4@gmail.com", Password = "123123123"},
-            });
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
 
+            modelBuilder.Seed();
             //ChangeToUtcDate(modelBuilder);
         }
         public DbSet<User> Users => Set<User>();
+        public DbSet<Wallet> Wallets => Set<Wallet>();
+        public DbSet<Category> Categories => Set<Category>();
+        public DbSet<Transaction> Transactions => Set<Transaction>();
+        public DbSet<Budget> Budgets => Set<Budget>();
+        public DbSet<Event> Events => Set<Event>();
+        public DbSet<Settings> Settings => Set<Settings>();
         public override int SaveChanges()
         {
             AddTimestamps();
@@ -68,7 +69,7 @@ namespace MochiApi.Models
         private void AddTimestamps()
         {
             var entities = ChangeTracker.Entries()
-                .Where(x => x.Entity is AuditEntity && (x.State == EntityState.Added || x.State == EntityState.Modified));
+                .Where(x => x.Entity is BaseEntity && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
             foreach (var entity in entities)
             {
@@ -76,9 +77,9 @@ namespace MochiApi.Models
 
                 if (entity.State == EntityState.Added)
                 {
-                    ((AuditEntity)entity.Entity).CreatedAt = now;
+                    ((BaseEntity)entity.Entity).CreatedAt = now;
                 }
-                ((AuditEntity)entity.Entity).UpdatedAt = now;
+                ((BaseEntity)entity.Entity).UpdatedAt = now;
             }
         }
     }

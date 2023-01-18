@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MochiApi.Models;
 
@@ -10,9 +11,10 @@ using MochiApi.Models;
 namespace MochiApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221229103628_ModifyTransaction_EventModel")]
+    partial class ModifyTransaction_EventModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,30 +128,6 @@ namespace MochiApi.Migrations
                     b.HasIndex("WalletId");
 
                     b.ToTable("Event");
-                });
-
-            modelBuilder.Entity("MochiApi.Models.Settings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Mode")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Settings");
                 });
 
             modelBuilder.Entity("MochiApi.Models.Transaction", b =>
@@ -418,17 +396,6 @@ namespace MochiApi.Migrations
                     b.Navigation("Wallet");
                 });
 
-            modelBuilder.Entity("MochiApi.Models.Settings", b =>
-                {
-                    b.HasOne("MochiApi.Models.User", "User")
-                        .WithOne("Settings")
-                        .HasForeignKey("MochiApi.Models.Settings", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("MochiApi.Models.Transaction", b =>
                 {
                     b.HasOne("MochiApi.Models.Category", "Category")
@@ -490,9 +457,6 @@ namespace MochiApi.Migrations
 
             modelBuilder.Entity("MochiApi.Models.User", b =>
                 {
-                    b.Navigation("Settings")
-                        .IsRequired();
-
                     b.Navigation("WalletMembers");
                 });
 
