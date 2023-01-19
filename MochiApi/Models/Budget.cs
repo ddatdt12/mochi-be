@@ -3,7 +3,7 @@
 namespace MochiApi.Models
 {
     [Table("Budget")]
-    public class Budget
+    public class Budget : BaseEntity
     {
         public Budget()
         {

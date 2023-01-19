@@ -18,7 +18,7 @@ namespace MochiApi.Controllers
     {
         public IWalletService _walletService { get; set; }
         public IMapper _mapper { get; set; }
-        public WalletController(IWalletService walletSer, DataContext context, IMapper mapper)
+        public WalletController(IWalletService walletSer, IMapper mapper)
         {
             _walletService = walletSer;
             _mapper = mapper;
@@ -32,6 +32,7 @@ namespace MochiApi.Controllers
             var walletsRes = _mapper.Map<IEnumerable<WalletDto>>(wallets);
             return Ok(new ApiResponse<IEnumerable<WalletDto>>(walletsRes, "Get my wallets successfully!"));
         }
+
         [HttpPost]
         public async Task<IActionResult> CreateWallet([FromBody] CreateWalletDto createWalletDto)
         {
@@ -40,5 +41,26 @@ namespace MochiApi.Controllers
             var walletDto = _mapper.Map<WalletDto>(wallet);
             return Ok(new ApiResponse<WalletDto>(walletDto, "Create wallet successfully!"));
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateWallet(int id,[FromBody] UpdateWalletDto updateWallet)
+        {
+            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
+            
+            await _walletService.UpdateWallet(id ,userId, updateWallet);
+         
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteWallet(int id)
+        {
+            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
+            
+            await _walletService.DeleteWallet(id ,userId);
+         
+            return NoContent();
+        }
+
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace MochiApi.Models
+﻿namespace MochiApi.Dtos
 {
-    public abstract class AuditEntity
+    public abstract class BaseEntityDto
     {
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }

@@ -83,9 +83,36 @@ namespace MochiApi.Services
             }
         }
 
-        public Task UpdateWallet(int walletId, int userid, UpdateWalletDto updateWallet)
+        public async Task UpdateWallet(int walletId, int userId, UpdateWalletDto updateWallet)
         {
-            throw new NotImplementedException();
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
+            if (wallet == null)
+            {
+                throw new ApiException("Wallet not found!",400);
+            }
+            _mapper.Map(updateWallet, wallet);
+
+            await _context.SaveChangesAsync();
         }
+        
+        public async Task DeleteWallet(int walletId, int userId)
+        {
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
+
+            if (wallet == null)
+            {
+                throw new ApiException("Wallet not found!", 400);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> VerifyIsUserInWallet(int walletId, int userId)
+        {
+            var exist = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).AnyAsync();
+
+            return exist;
+        }
+
     }
 }

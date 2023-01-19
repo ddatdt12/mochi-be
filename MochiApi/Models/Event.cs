@@ -3,8 +3,8 @@
 namespace MochiApi.Models
 {
     [Table("Event")]
-    public class Event
-    {
+    public class Event : BaseEntity
+    { 
         public Event()
         {
             Name = String.Empty;

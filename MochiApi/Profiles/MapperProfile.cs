@@ -20,5 +20,9 @@ public class MapperProfile : Profile
         CreateMap<Wallet, WalletDto>();
         CreateMap<CreateWalletDto, Wallet>();
         CreateMap<UpdateWalletDto, Wallet>();
+
+        CreateMap<Transaction, TransactionDto>();
+        CreateMap<CreateTransactionDto, Transaction>();
+        CreateMap<UpdateTransactionDto, Transaction>();
     }
 }

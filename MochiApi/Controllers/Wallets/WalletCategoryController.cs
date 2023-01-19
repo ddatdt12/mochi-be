@@ -18,7 +18,7 @@ namespace MochiApi.Controllers
     {
         public ICategoryService _categoryService { get; set; }
         public IMapper _mapper { get; set; }
-        public WalletCategoryController(ICategoryService category, DataContext context, IMapper mapper)
+        public WalletCategoryController(ICategoryService category, IMapper mapper)
         {
             _categoryService = category;
             _mapper = mapper;

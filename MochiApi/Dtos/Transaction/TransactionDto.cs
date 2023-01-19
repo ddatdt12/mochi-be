@@ -1,8 +1,8 @@
-﻿namespace MochiApi.Models
+﻿namespace MochiApi.Dtos
 {
-    public class Transaction : BaseEntity
+    public class TransactionDto : BaseEntityDto
     {
-        public Transaction()
+        public TransactionDto()
         {
             Note = String.Empty;
         }
@@ -10,12 +10,12 @@
         public int Amount { get; set; }
         public string Note { get; set; }
         public int CreatorId { get; set; }
-        public User? Creator { get; set; }
+        public UserDto? Creator { get; set; }
         public int WalletId { get; set; }
-        public Wallet? Wallet { get; set; }
+        public WalletDto? Wallet { get; set; }
         public int CategoryId { get; set; }
-        public Category? Category { get; set; }
+        public CategoryDto? Category { get; set; }
         public int? EventId { get; set; }
-        public Event? Event { get; set; }
+
     }
 }

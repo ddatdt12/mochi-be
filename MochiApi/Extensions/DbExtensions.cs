@@ -17,13 +17,14 @@ namespace MochiApi.Extensions
             });
 
             var date = new DateTime(2022, 12, 29);
-            modelBuilder.Entity<Wallet>().HasData(new List<Wallet>
+            var wallets = new List<Wallet>
             {
                 new Wallet{ Id = 1, Type = Common.Enum.WalletType.Personal, IsDefault = true, Balance = 100000, Name = "Ví"},
                 new Wallet{ Id = 2, Type = Common.Enum.WalletType.Personal, IsDefault = true, Balance = 200000, Name = "Ví"},
                 new Wallet{ Id = 3, Type = Common.Enum.WalletType.Personal, IsDefault = true, Balance = 300000, Name = "Ví"},
                 new Wallet{ Id = 4, Type = Common.Enum.WalletType.Personal, IsDefault = true, Balance = 400000, Name = "Ví"},
-            });
+            };
+            modelBuilder.Entity<Wallet>().HasData(wallets);
 
             modelBuilder.Entity<WalletMember>().HasData(
                 new List<WalletMember>
@@ -59,9 +60,7 @@ namespace MochiApi.Extensions
                 }
                 );
 
-
-            modelBuilder.Entity<Category>().HasData(
-            new List<Category> {
+            var baseListCateogry = new List<Category> {
                 new Category {
                     Id = 1,
                     Name = "Ăn uống",
@@ -174,8 +173,49 @@ namespace MochiApi.Extensions
                     Group = CategoryGroup.InvestingOrDebt,
                      Type = Common.Enum.CategoryType.Expense,
                 },
+            };
+
+            var listCategory = new List<Category>();
+            var index = 17;
+
+            foreach (var w in wallets)
+            {
+                foreach (var c in baseListCateogry)
+                {
+                    listCategory.Add(new Category
+                    {
+                        Id = index++,
+                        WalletId = w.Id,
+                        Name = c.Name,
+                        Icon = c.Icon,
+                        Group = c.Group,
+                        Type = c.Type,
+                    }); ;
+                }
             }
-            );
+            
+
+            modelBuilder.Entity<Category>().HasData(baseListCateogry);
+            modelBuilder.Entity<Category>().HasData(listCategory);
+
+
+            //listCateogry.ForEach(c => {
+            //        c.Id = index++;
+            //        c.WalletId = 2;
+            //    listWalletCategory.Add(c);
+            //});
+            //listCateogry.ForEach(c => {
+            //        c.Id = index++;
+            //        c.WalletId = 3;
+            //    listWalletCategory.Add(c);
+            //});
+            //listCateogry.ForEach(c => {
+            //        c.Id = index++;
+            //        c.WalletId = 4;
+            //    listWalletCategory.Add(c);
+            //});
+
+            //modelBuilder.Entity<Category>().HasData(listWalletCategory);
         }
     }
 }

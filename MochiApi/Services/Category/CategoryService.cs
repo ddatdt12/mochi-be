@@ -96,5 +96,10 @@ namespace MochiApi.Services
         {
             throw new NotImplementedException();
         }
+
+        public async Task<bool> VerifyIsCategoryOfWallet(int categoryId, int walletId)
+        {
+            return await _context.Categories.Where(c => c.Id == categoryId && c.WalletId == walletId).AnyAsync();
+        }
     }
 }
