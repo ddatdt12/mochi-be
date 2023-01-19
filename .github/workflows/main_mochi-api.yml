@@ -53,5 +53,5 @@ jobs:
         with:
           app-name: 'mochi-api'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D6786A627EDE433E9E86782257788F5D }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E54ED1701B2F4C77B85542983E67035D }}
           package: .
