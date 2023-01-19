@@ -5,7 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MochiApi.Error;
 using MochiApi.Services;
-using MochiApi.Services.Mail;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Net.Mime;
 using System.Text;
@@ -30,6 +29,8 @@ namespace MochiApi.Extensions
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IUserService, UserService>()
             .AddScoped<IMailService, MailService>()
+            .AddScoped<ICategoryService, CategoryService>()
+            .AddScoped<IWalletService, WalletService>()
             .AddSingleton<IDictionary<string, string>>(_ => new Dictionary<string, string>());
         public static void ConfigureSwaggerOptions(this SwaggerGenOptions options)
         {

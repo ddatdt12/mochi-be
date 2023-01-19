@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MochiApi.Models;
 
@@ -10,9 +11,10 @@ using MochiApi.Models;
 namespace MochiApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230115050012_ChangeForeignkeyWalletMemberModel")]
+    partial class ChangeForeignkeyWalletMemberModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,9 +69,6 @@ namespace MochiApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("Group")
-                        .HasColumnType("int");
-
                     b.Property<string>("Icon")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -94,130 +93,93 @@ namespace MochiApi.Migrations
                         new
                         {
                             Id = 1,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Ăn uống",
                             Type = 1
                         },
                         new
                         {
                             Id = 2,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Di chuyển",
                             Type = 1
                         },
                         new
                         {
                             Id = 3,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Thuê nhà",
                             Type = 1
                         },
                         new
                         {
                             Id = 4,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Hóa đơn điện thoại",
                             Type = 1
                         },
                         new
                         {
                             Id = 5,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Hóa đơn internet",
                             Type = 1
                         },
                         new
                         {
                             Id = 6,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Hóa đơn tiện ích khác",
                             Type = 1
                         },
                         new
                         {
                             Id = 7,
-                            Group = 2,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Sửa & trang trí khác",
                             Type = 1
                         },
                         new
                         {
                             Id = 8,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Bảo dưỡng xe",
                             Type = 1
                         },
                         new
                         {
                             Id = 9,
-                            Group = 2,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Khám sức khỏe",
                             Type = 1
                         },
                         new
                         {
                             Id = 10,
-                            Group = 1,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Thể dục thể thao",
                             Type = 1
                         },
                         new
                         {
                             Id = 11,
-                            Group = 0,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Lương",
                             Type = 0
                         },
                         new
                         {
                             Id = 12,
-                            Group = 0,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Tiền ăn vặt",
                             Type = 0
                         },
                         new
                         {
                             Id = 13,
-                            Group = 0,
-                            Icon = "1",
+                            Icon = "https://picsum.photos/100",
                             Name = "Thu nhập khác",
                             Type = 0
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Đầu tư",
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 15,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Nợ",
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 16,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Cho vay",
-                            Type = 1
                         });
                 });
 

@@ -12,5 +12,13 @@ public class MapperProfile : Profile
         CreateMap<UserDto, User>();
         CreateMap<RegisterUserDto, User>();
         CreateMap<LoginUserDto, User>();
+
+        CreateMap<CreateCategoryDto, Category>();
+        CreateMap<UpdateCategoryDto, Category>();
+        CreateMap<Category, CategoryDto>();
+
+        CreateMap<Wallet, WalletDto>();
+        CreateMap<CreateWalletDto, Wallet>();
+        CreateMap<UpdateWalletDto, Wallet>();
     }
 }

@@ -5,67 +5,20 @@ namespace MochiApi.Common
     public static class Enum
     {
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum OrderStatus
-        {
-            Created,
-            Doing,
-            Delivered,
-            Completed,
-            Cancelled,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum TargetType
-        {
-            THIS,
-            THIS_AND_FOLLOWING,
-            ALL,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum RecurringUnit
-        {
-            DAY = 1,
-            WEEK = 2,
-            MONTH = 3,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum NotificationUnit
-        {
-            MINUTE = 1,
-            HOUR = 2,
-            DAY = 3,
-            WEEK = 4,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum TypeQuery
-        {
-            EVENT = 1,
-            COURSE = 2,
-            ALL = 3,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum DayOffAction
-        {
-            Create = 1,
-            Delete = 2,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum EndDateCourseType
-        {
-            EndDate = 1,
-            NumberOfLessons = 2,
-        }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
         public enum CategoryType
         {
-            Standard,
-            Custom
+            Income,
+            Expense
+        }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum CategoryGroup
+        {
+            Income,
+            RequiredExpense,
+            NecessaryExpense,
+            Entertainment,
+            InvestingOrDebt,
         }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]

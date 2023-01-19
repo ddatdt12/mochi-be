@@ -53,12 +53,12 @@ namespace MochiApi.Middlewares
             if (token != null)
             {
                 var userId = ValidateToken(token);
-                if (userId != null)
+                if (userId != null && int.TryParse(userId, out int userIdInt))
                 {
                     // attach user to context on successful jwt validation
-                    var user = await userService.GetById(new Guid(userId));
+                    var user = await userService.GetById(userIdInt);
                     context.Items["User"] = user;
-                    context.Items["UserId"] = userId;
+                    context.Items["UserId"] = userIdInt;
                 }
             }
             await _next(context);

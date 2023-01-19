@@ -4,6 +4,6 @@ namespace MochiApi.Services
 {
     public interface IUserService
     {
-        Task<User?> GetById(Guid id);
+        Task<User?> GetById(int id);
     }
 }

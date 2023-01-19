@@ -1,6 +1,5 @@
 ﻿using MochiApi.Extensions;
 using Microsoft.EntityFrameworkCore;
-using MochiApi.Models;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MochiApi.Models
@@ -21,6 +20,7 @@ namespace MochiApi.Models
         }
         public DbSet<User> Users => Set<User>();
         public DbSet<Wallet> Wallets => Set<Wallet>();
+        public DbSet<WalletMember> WalletMembers => Set<WalletMember>();
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<Budget> Budgets => Set<Budget>();

@@ -15,9 +15,8 @@ namespace MochiApi.Models
         public string Name { get; set; }
         public string Icon { get; set; }
         public CategoryType Type { get; set; }
-        public int WalletId{get; set;}
-        public Wallet? Wallet{get; set;}
-        public int CreatorId{get; set;}
-        public User? Creator{get; set;}
+        public CategoryGroup Group { get; set; }
+        public int? WalletId { get; set; }
+        public Wallet? Wallet { get; set; }
     }
 }

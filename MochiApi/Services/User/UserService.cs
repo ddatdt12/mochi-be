@@ -10,7 +10,7 @@ namespace MochiApi.Services
             _context = context;
         }
 
-        public async Task<User?> GetById(Guid id)
+        public async Task<User?> GetById(int id)
         {
             return await _context.Users.FindAsync(id);
         }

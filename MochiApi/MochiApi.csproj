@@ -25,4 +25,8 @@
     <PackageReference Include="Z.EntityFramework.Extensions.EFCore" Version="6.16.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\Categories\" />
+  </ItemGroup>
+
 </Project>

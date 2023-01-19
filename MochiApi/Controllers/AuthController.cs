@@ -27,10 +27,13 @@ namespace MochiApi.Controllers
         [Produces(typeof(ApiResponse<UserDto>))]
         public async Task<IActionResult> Login([FromBody] LoginUserDto loginUser)
         {
-            (User? user, string? token) = await _auth.Login(loginUser);
+            (User user, string token) = await _auth.Login(loginUser);
             var userDTO = _mapper.Map<UserDto>(user);
-            userDTO.Token = token;
-            return Ok(new ApiResponse<UserDto>(userDTO,"Login successfully"));
+            return Ok(new
+            {
+                data = userDTO,
+                token = token
+            });
         }
 
         [HttpPost("register")]
@@ -46,7 +49,7 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> VerifyEmailToken([FromBody] TokenDTO tokenDTO)
         {
             (User user, string token) = await _auth.VerifyEmailToken(tokenDTO);
-            var userDTO = _mapper.Map<UserDto>(user); userDTO.Token = token;
+            var userDTO = _mapper.Map<UserDto>(user); 
             return Ok(new ApiResponse<UserDto>(userDTO, "Verify account successfully!"));
         }
 
@@ -70,7 +73,6 @@ namespace MochiApi.Controllers
         {
             (User user, string token) = await _auth.ResetPassword(reUser);
             var userDTO = _mapper.Map<UserDto>(user);
-            userDTO.Token = token;
             return Ok(new ApiResponse<UserDto>(userDTO, "Reset Password successfully."));
         }
 

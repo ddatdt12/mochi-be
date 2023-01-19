@@ -29,8 +29,8 @@ namespace MochiApi.Models
              .HasMany(p => p.Wallets)
              .WithMany(p => p.Members)
              .UsingEntity<WalletMember>(
-             r => r.HasOne(rm => rm.Wallet).WithMany(u => u.WalletMembers).HasForeignKey(rm => rm.UserId),
-             r => r.HasOne(rm => rm.User).WithMany(u => u.WalletMembers).HasForeignKey(rm => rm.WalletId),
+             r => r.HasOne(rm => rm.Wallet).WithMany(u => u.WalletMembers).HasForeignKey(rm => rm.WalletId),
+             r => r.HasOne(rm => rm.User).WithMany(u => u.WalletMembers).HasForeignKey(rm => rm.UserId),
              rm =>
              {
                  rm.HasKey(t => new { t.UserId, t.WalletId });
