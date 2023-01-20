@@ -1,4 +1,6 @@
-﻿namespace MochiApi.Dtos
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MochiApi.Dtos
 {
     public class CreateTransactionDto
     {
@@ -9,7 +11,10 @@
         public int Amount { get; set; }
         public string Note { get; set; }
         public int CategoryId { get; set; }
-        public int? EventId { get; set; }
+        public string? Image { get; set; }
+        [Required]
+        public DateTime? CreatedAt{ get; set; }
+        //public int? EventId { get; set; }
 
     }
 }

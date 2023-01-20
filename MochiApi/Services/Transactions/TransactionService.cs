@@ -21,7 +21,9 @@ namespace MochiApi.Services
 
         public async Task<IEnumerable<Transaction>> GetTransactions(int walletId, TransactionFilterDto filter)
         {
-            var transQuery = _context.Transactions.Where(t => t.WalletId == walletId).OrderByDescending(t=> t.CreatedAt)
+            var transQuery = _context.Transactions.Where(t => t.WalletId == walletId)
+            .Include(t => t.Category)
+            .OrderByDescending(t=> t.CreatedAt)
             .AsNoTracking();
 
             if (filter.StartDate.HasValue)
@@ -56,8 +58,7 @@ namespace MochiApi.Services
 
         public async Task UpdateTransaction(int transactionId, int walletId,UpdateTransactionDto updateTransDto)
         {
-            var trans = await _context.Transactions.Where(t => t.Id == transactionId && t.WalletId == walletId)
-            .AsNoTracking().FirstOrDefaultAsync();
+            var trans = await _context.Transactions.Where(t => t.Id == transactionId && t.WalletId == walletId).FirstOrDefaultAsync();
             if (trans == null)
             {
                 throw new ApiException("Transaction not found!",400);

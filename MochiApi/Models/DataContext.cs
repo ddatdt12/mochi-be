@@ -14,6 +14,7 @@ namespace MochiApi.Models
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new TransactionConfiguration());
 
             modelBuilder.Seed();
             //ChangeToUtcDate(modelBuilder);

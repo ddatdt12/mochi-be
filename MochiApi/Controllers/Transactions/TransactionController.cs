@@ -72,7 +72,7 @@ namespace MochiApi.Controllers
                 throw new ApiException("Access denied!", 400);
             }
 
-            if (updateTransDto.CategoryId.HasValue && !await _categoryService.VerifyIsCategoryOfWallet((int)updateTransDto.CategoryId, walletId))
+            if (!await _categoryService.VerifyIsCategoryOfWallet((int)updateTransDto.CategoryId, walletId))
             {
                 throw new ApiException("Invalid category!", 400);
             }

@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.ComponentModel.DataAnnotations.Schema;
 using static MochiApi.Common.Enum;
 
 namespace MochiApi.Models
@@ -19,4 +21,5 @@ namespace MochiApi.Models
         public int? WalletId { get; set; }
         public Wallet? Wallet { get; set; }
     }
+
 }
