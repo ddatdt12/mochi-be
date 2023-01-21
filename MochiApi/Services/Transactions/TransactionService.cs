@@ -9,21 +9,23 @@ namespace MochiApi.Services
     public class TransactionService : ITransactionService
     {
         private readonly IConfiguration _configuration;
+        private readonly IBudgetService _budgetService;
         private readonly IMapper _mapper;
         public DataContext _context { get; set; }
 
-        public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper)
+        public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper, IBudgetService budgetService)
         {
             _configuration = configuration;
             _context = context;
             _mapper = mapper;
+            _budgetService = budgetService;
         }
 
         public async Task<IEnumerable<Transaction>> GetTransactions(int walletId, TransactionFilterDto filter)
         {
             var transQuery = _context.Transactions.Where(t => t.WalletId == walletId)
             .Include(t => t.Category)
-            .OrderByDescending(t=> t.CreatedAt)
+            .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 
             if (filter.StartDate.HasValue)
@@ -45,26 +47,45 @@ namespace MochiApi.Services
 
         public async Task<Transaction> CreateTransaction(int userId, int walletId, CreateTransactionDto transDto)
         {
-                var trans = _mapper.Map<Transaction>(transDto);
+            var trans = _mapper.Map<Transaction>(transDto);
 
-                trans.CreatorId = userId;
-                trans.WalletId = walletId;
+            trans.CreatorId = userId;
+            trans.WalletId = walletId;
 
-                await _context.Transactions.AddAsync(trans);
-                await _context.SaveChangesAsync();
+            await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+                trans.CreatedAt.Year, trans.Amount, saveChanges: false);
 
-                return trans;
+            await _context.Transactions.AddAsync(trans);
+            await _context.SaveChangesAsync();
+
+            return trans;
         }
 
-        public async Task UpdateTransaction(int transactionId, int walletId,UpdateTransactionDto updateTransDto)
+        public async Task UpdateTransaction(int transactionId, int walletId, UpdateTransactionDto updateTransDto)
         {
             var trans = await _context.Transactions.Where(t => t.Id == transactionId && t.WalletId == walletId).FirstOrDefaultAsync();
             if (trans == null)
             {
-                throw new ApiException("Transaction not found!",400);
+                throw new ApiException("Transaction not found!", 400);
+            }
+
+            if (updateTransDto.CategoryId != trans.CategoryId)
+            {
+                await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
+                updateTransDto.CreateAtValue.Year, updateTransDto.Amount, saveChanges: false);
+
+                await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+                trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+            }
+            else if (updateTransDto.Amount != trans.Amount)
+            {
+                await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
+    updateTransDto.CreateAtValue.Year, updateTransDto.Amount - trans.Amount, saveChanges: false);
             }
 
             _mapper.Map(updateTransDto, trans);
+
+
 
             await _context.SaveChangesAsync();
         }
@@ -76,6 +97,10 @@ namespace MochiApi.Services
             {
                 throw new ApiException("Transaction not found!", 400);
             }
+
+            await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+                trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+
             _context.Transactions.Remove(trans);
             await _context.SaveChangesAsync();
         }

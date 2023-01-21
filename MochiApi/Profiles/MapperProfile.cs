@@ -24,5 +24,9 @@ public class MapperProfile : Profile
         CreateMap<Transaction, TransactionDto>();
         CreateMap<CreateTransactionDto, Transaction>();
         CreateMap<UpdateTransactionDto, Transaction>();
+
+        CreateMap<Budget, BudgetDto>();
+        CreateMap<CreateBudgetDto, Budget>();
+        CreateMap<UpdateBudgetDto, Budget>();
     }
 }

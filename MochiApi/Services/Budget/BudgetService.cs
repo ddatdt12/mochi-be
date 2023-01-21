@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MochiApi.Dtos;
 using MochiApi.Error;
 using MochiApi.Models;
+using System.Linq.Expressions;
 
 namespace MochiApi.Services
 {
@@ -19,64 +20,116 @@ namespace MochiApi.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactions(int walletId, TransactionFilterDto filter)
+        public async Task<IEnumerable<Budget>> GetBudgets(int walletId, int month, int year)
         {
-            var transQuery = _context.Transactions.Where(t => t.WalletId == walletId)
-            .Include(t => t.Category)
-            .OrderByDescending(t=> t.CreatedAt)
-            .AsNoTracking();
+            var budgets = await _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year)
+            .Include(b => b.Category)
+            .ToListAsync();
 
-            if (filter.StartDate.HasValue)
+            return budgets;
+        }
+        public async Task<BudgetSummary> StatisticBudget(int walletId, int month, int year)
+        {
+            var budgetsQuery = _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year);
+
+            var budgetSum = new BudgetSummary
             {
-                var startDate = filter.StartDate?.Date;
-                transQuery = transQuery.Where(t => t.CreatedAt >= startDate);
-            }
-
-            if (filter.EndDate.HasValue)
-            {
-                var EndDate = filter.EndDate?.Date.AddDays(1).AddSeconds(-1);
-                transQuery = transQuery.Where(t => t.CreatedAt <= EndDate);
-            }
-
-
-            var trans = await transQuery.ToListAsync();
-            return trans;
+                TotalBudget = await budgetsQuery.SumAsync(b => b.LimitAmount),
+                TotalSpentAmount = await budgetsQuery.SumAsync(b => b.SpentAmount),
+            };
+            return budgetSum;
         }
 
-        public async Task<Transaction> CreateTransaction(int userId, int walletId, CreateTransactionDto transDto)
+        async Task<bool> IsBudgetExist(int categoryId, int month, int year, Expression<Func<Budget, bool>>? predicate = null)
         {
-                var trans = _mapper.Map<Transaction>(transDto);
-
-                trans.CreatorId = userId;
-                trans.WalletId = walletId;
-
-                await _context.Transactions.AddAsync(trans);
-                await _context.SaveChangesAsync();
-
-                return trans;
+            var budgetQuery = _context.Budgets.Where(b => b.CategoryId == categoryId && b.Month == month && b.Year == year);
+            if (predicate != null)
+            {
+                budgetQuery = budgetQuery.Where(predicate);
+            }
+            return await budgetQuery.AnyAsync();
         }
 
-        public async Task UpdateTransaction(int transactionId, int walletId,UpdateTransactionDto updateTransDto)
+        public async Task<Budget> CreateBudget(int userId, CreateBudgetDto createDto)
         {
-            var trans = await _context.Transactions.Where(t => t.Id == transactionId && t.WalletId == walletId).FirstOrDefaultAsync();
-            if (trans == null)
+            var cate = await _context.Categories.Where(c => c.Id == createDto.CategoryId).FirstOrDefaultAsync();
+
+            if (cate == null || cate.Type == Common.Enum.CategoryType.Income)
             {
-                throw new ApiException("Transaction not found!",400);
+                throw new ApiException("Invalid category", 400);
             }
 
-            _mapper.Map(updateTransDto, trans);
+            if (await IsBudgetExist(createDto.CategoryId, createDto.Month, createDto.Year))
+            {
+                throw new ApiException("Budget for this category in this time duration have already existed!", 400);
+            }
 
+            var budget = _mapper.Map<Budget>(createDto);
+
+            var spentInMonth = _context.Transactions.Where(t => t.CategoryId == budget.CategoryId
+            && t.CreatedAt.Month == createDto.Month && t.CreatedAt.Year == createDto.Year).Sum(t => t.Amount);
+
+            budget.CreatorId = userId;
+            budget.SpentAmount = spentInMonth;
+            await _context.Budgets.AddAsync(budget);
+
+            await _context.SaveChangesAsync();
+            return budget;
+        }
+
+        public async Task UpdateBudget(int id, int walletId, UpdateBudgetDto updateDto)
+        {
+            var budget = await _context.Budgets.Where(t => t.Id == id && t.WalletId == walletId).FirstOrDefaultAsync();
+            if (budget == null)
+            {
+                throw new ApiException("Budget not found!", 400);
+            }
+
+            if (updateDto.CategoryId != budget.CategoryId)
+            {
+                var cate = await _context.Categories.Where(c => c.Id == updateDto.CategoryId).FirstOrDefaultAsync();
+
+                if (cate == null || cate.Type == Common.Enum.CategoryType.Income)
+                {
+                    throw new ApiException("Invalid category", 400);
+                }
+
+                if (await IsBudgetExist(updateDto.CategoryId, updateDto.Month, updateDto.Year))
+                {
+                    throw new ApiException("Budget for this category in this time duration have already existed!", 400);
+                }
+
+                var spentInMonth = _context.Transactions.Where(t => t.CategoryId == updateDto.CategoryId
+                && t.CreatedAt.Month == updateDto.Month && t.CreatedAt.Year == updateDto.Year).Sum(t => t.Amount);
+                budget.SpentAmount = spentInMonth;
+            }
+
+
+            _mapper.Map(updateDto, budget);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteTransaction(int transactionId)
+        public async Task UpdateSpentAmount(int categoryId, int month, int year, int amount, bool saveChanges = false)
         {
-            var trans = await _context.Transactions.Where(t => t.Id == transactionId).FirstOrDefaultAsync();
-            if (trans == null)
+            var budget = await _context.Budgets.Where(b => b.CategoryId == categoryId && b.Month == month && b.Year == year).FirstOrDefaultAsync();
+
+            if (budget != null)
+            {
+                budget.SpentAmount += amount;
+                if (saveChanges)
+                {
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+        public async Task DeleteBudget(int id, int walletId)
+        {
+            var budget = await _context.Budgets.Where(t => t.Id == id && t.WalletId == walletId).FirstOrDefaultAsync();
+            if (budget == null)
             {
                 throw new ApiException("Transaction not found!", 400);
             }
-            _context.Transactions.Remove(trans);
+            _context.Budgets.Remove(budget);
             await _context.SaveChangesAsync();
         }
     }

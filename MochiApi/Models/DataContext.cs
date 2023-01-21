@@ -15,6 +15,7 @@ namespace MochiApi.Models
         {
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new TransactionConfiguration());
+            modelBuilder.ApplyConfiguration(new BudgetConfiguration());
 
             modelBuilder.Seed();
             //ChangeToUtcDate(modelBuilder);

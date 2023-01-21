@@ -17,5 +17,16 @@ namespace MochiApi.Dtos
         [Required]
         public DateTime? CreatedAt { get; set; }
 
+        public DateTime CreateAtValue
+        {
+            get
+            {
+                if (!CreatedAt.HasValue)
+                {
+                    return DateTime.UtcNow;
+                }
+                return (DateTime)CreatedAt!;
+            }
+        }
     }
 }
