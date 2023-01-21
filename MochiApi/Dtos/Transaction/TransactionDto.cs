@@ -1,6 +1,6 @@
 ﻿namespace MochiApi.Dtos
 {
-    public class TransactionDto : BaseEntityDto
+    public class TransactionDto
     {
         public TransactionDto()
         {
@@ -15,6 +15,7 @@
         public WalletDto? Wallet { get; set; }
         public int CategoryId { get; set; }
         public CategoryDto? Category { get; set; }
+        public DateTime CreatedAt{ get; set; }
         public int? EventId { get; set; }
 
     }

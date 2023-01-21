@@ -31,7 +31,9 @@ namespace MochiApi.Extensions
             .AddScoped<IMailService, MailService>()
             .AddScoped<ICategoryService, CategoryService>()
             .AddScoped<IWalletService, WalletService>()
-            .AddScoped<ITransactionService, TransactionService>()
+            .AddScoped<
+            ITransactionService, TransactionService>()
+            .AddScoped<IBudgetService, BudgetService>()
             .AddSingleton<IDictionary<string, string>>(_ => new Dictionary<string, string>());
         public static void ConfigureSwaggerOptions(this SwaggerGenOptions options)
         {

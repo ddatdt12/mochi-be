@@ -35,9 +35,38 @@ namespace MochiApi.Controllers
             {
                 throw new ApiException("Access denied!", 400);
             }
-            var trans = await _transactionService.GetTransactions(walletId, filter);
-            var transRes = _mapper.Map<IEnumerable<TransactionDto>>(trans);
-            return Ok(new ApiResponse<IEnumerable<TransactionDto>>(transRes, "Get transaction successfully!"));
+            var transList = await _transactionService.GetTransactions(walletId, filter);
+            var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
+            var groupByDates = transRes.GroupBy(tr => tr.CreatedAt.Date);
+            List<TransactionGroupDateDto> response = new List<TransactionGroupDateDto>();
+            long totalIncome = 0, totalExpense = 0;
+            foreach (var group in groupByDates)
+            {
+                TransactionGroupDateDto item = new TransactionGroupDateDto { Date = group.Key };
+                long revenue = 0;
+
+                foreach (var transaction in group)
+                {
+                    if (transaction.Category!.Type == Common.Enum.CategoryType.Income)
+                    {
+                        totalIncome += transaction.Amount;
+                        revenue += transaction.Amount;
+                    }else{
+                        totalExpense += transaction.Amount;
+                        revenue -= transaction.Amount;
+                    }
+                    item.Transactions.Add(transaction);
+                }
+
+                item.Revenue = revenue;
+                response.Add(item);
+            }
+
+            return Ok(new ApiResponse<object>(new {
+                totalIncome,
+                totalExpense,
+                details = response
+            }, "Get transaction statistic group by date successfully!"));
         }
 
         [HttpPost]
@@ -55,7 +84,7 @@ namespace MochiApi.Controllers
                 throw new ApiException("Invalid category!", 400);
             }
 
-            var trans = await _transactionService.CreateTransaction((int)userId ,walletId, createTransactionDto);
+            var trans = await _transactionService.CreateTransaction((int)userId, walletId, createTransactionDto);
 
             var transRes = _mapper.Map<TransactionDto>(trans);
             return new CreatedResult("", new ApiResponse<TransactionDto>(transRes, "Create successfully"));
@@ -77,7 +106,7 @@ namespace MochiApi.Controllers
                 throw new ApiException("Invalid category!", 400);
             }
 
-            await _transactionService.UpdateTransaction(id, walletId,updateTransDto);
+            await _transactionService.UpdateTransaction(id, walletId, updateTransDto);
             return NoContent();
         }
 
@@ -86,7 +115,7 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> DeleteTrans(int id, int walletId)
         {
             var userId = HttpContext.Items["UserId"] as int?;
-            
+
             if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId))
             {
                 throw new ApiException("Access denied!", 400);
