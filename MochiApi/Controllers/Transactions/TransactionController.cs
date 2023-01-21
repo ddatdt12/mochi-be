@@ -27,7 +27,6 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet]
-        [Produces(typeof(ApiResponse<IEnumerable<TransactionDto>>))]
         public async Task<IActionResult> GetTransactions(int walletId, [FromQuery] TransactionFilterDto filter)
         {
             var userId = HttpContext.Items["UserId"] as int?;
