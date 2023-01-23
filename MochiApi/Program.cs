@@ -5,7 +5,10 @@ using MochiApi.Middlewares;
 using MochiApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.WebHost.ConfigureKestrel(c =>
+{
+    c.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5);
+});
 builder.Services.ConfigureCors();
 
 // Add services to the container.
