@@ -28,7 +28,7 @@ namespace MochiApi.Services
 
             return budgets;
         }
-        public async Task<BudgetSummary> StatisticBudget(int walletId, int month, int year)
+        public async Task<BudgetSummary> SummaryBudget(int walletId, int month, int year)
         {
             var budgetsQuery = _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year);
 
@@ -131,6 +131,87 @@ namespace MochiApi.Services
             }
             _context.Budgets.Remove(budget);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<BudgetDetailSummary> SummaryBudgetDetail(int id, int walletId, int month, int year)
+        {
+            var budget = await _context.Budgets.Where(b => b.Id == id && b.WalletId == walletId && b.Month == month && b.Year == year)
+             .FirstOrDefaultAsync();
+
+            if (budget == null)
+            {
+                throw new ApiException("Invalid budget", 400);
+            }
+
+            DateTime now = DateTime.Now;
+            DateTime date = new DateTime(year, month, 1);
+            if (now.Year != year || now.Month != month)
+            {
+                var RealDailyExpense = budget.SpentAmount / DateTime.DaysInMonth(year, month);
+                return new BudgetDetailSummary
+                {
+                    TotalBudget = budget.LimitAmount,
+                    TotalSpentAmount = budget.SpentAmount,
+                    ExpectedExpense = 0,
+                    RealDailyExpense = RealDailyExpense
+                };
+            }
+
+
+            int remainDaysOfMonth = DateTime.DaysInMonth(year, month) - DateTime.UtcNow.Day;
+            var realDailyExpense = budget.SpentAmount / DateTime.UtcNow.Day;
+            var summary = new BudgetDetailSummary
+            {
+                ExpectedExpense = realDailyExpense * remainDaysOfMonth + budget.SpentAmount,
+                RealDailyExpense = realDailyExpense,
+                TotalBudget = budget.LimitAmount,
+                TotalSpentAmount = budget.SpentAmount,
+                RecommendedDailyExpense = budget.RemainingAmount / realDailyExpense,
+            };
+
+            return summary;
+        }
+
+        async Task<Budget?> IBudgetService.GetBudget(int id, int walletId, int month, int year)
+        {
+            var budget = await _context.Budgets.AsNoTracking().Where(b => b.Id == id && b.WalletId == walletId && b.Month == month && b.Year == year)
+                 .FirstOrDefaultAsync();
+
+            return budget;
+        }
+
+        async Task<IEnumerable<BudgetDetailStatistic>> IBudgetService.StatisticBudget(int id, int walletId, int month, int year)
+        {
+            var budget = await _context.Budgets.Where(b => b.Id == id && b.WalletId == walletId && b.Month == month && b.Year == year)
+             .FirstOrDefaultAsync();
+
+            if (budget == null)
+            {
+                throw new ApiException("Invalid budget", 400);
+            }
+
+            int day = DateTime.DaysInMonth(year, month);
+
+            //if (year == DateTime.Now.Year && month == DateTime.Now.Month)
+            //{
+            //    day = DateTime.Now.Day;
+            //}
+
+            List<long> amountEachDay = new List<long>(new long[day]);
+
+            DateTime startDate = new DateTime(year, month, 1).ToUniversalTime();
+            DateTime endDate = startDate.AddMonths(1).AddSeconds(-1).ToUniversalTime();
+            var statistic = await _context.Transactions.Where(t => t.CategoryId == budget.CategoryId && t.CreatedAt >= startDate && t.CreatedAt <= endDate)
+            .GroupBy(t => t.CreatedAt.Date)
+            .Select(gr => new { Date = gr.Key, ExpenseAmount = gr.Sum(t => t.Amount) }).ToListAsync();
+
+            foreach (var item in statistic)
+            {
+                amountEachDay[item.Date.Day - 1] += item.ExpenseAmount;
+            }
+
+
+            return amountEachDay.Select((v, i) => new BudgetDetailStatistic { Date = new DateTime(year, month, i + 1), ExpenseAmount = v }).ToList();
         }
     }
 }

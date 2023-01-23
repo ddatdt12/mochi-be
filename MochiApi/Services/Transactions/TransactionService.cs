@@ -28,6 +28,12 @@ namespace MochiApi.Services
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 
+
+            if (filter.CategoryId.HasValue)
+            {
+                transQuery = transQuery.Where(t => t.CategoryId == filter.CategoryId);
+            }
+
             if (filter.StartDate.HasValue)
             {
                 var startDate = filter.StartDate?.Date;
@@ -39,7 +45,7 @@ namespace MochiApi.Services
                 var EndDate = filter.EndDate?.Date.AddDays(1).AddSeconds(-1);
                 transQuery = transQuery.Where(t => t.CreatedAt <= EndDate);
             }
-
+      
 
             var trans = await transQuery.ToListAsync();
             return trans;
@@ -84,8 +90,6 @@ namespace MochiApi.Services
             }
 
             _mapper.Map(updateTransDto, trans);
-
-
 
             await _context.SaveChangesAsync();
         }

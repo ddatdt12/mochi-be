@@ -13,6 +13,14 @@ namespace MochiApi.Models
         public int Id { get; set; }
         public int SpentAmount { get; set; }
         public int LimitAmount { get; set; }
+        [NotMapped]
+        public int RemainingAmount
+        {
+            get
+            {
+                return LimitAmount > SpentAmount ? LimitAmount - LimitAmount : 0;
+            }
+        }
         public int Month { get; set; }
         public int Year { get; set; }
         public int CategoryId { get; set; }
