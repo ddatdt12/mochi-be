@@ -1,4 +1,5 @@
-﻿using MochiApi.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using MochiApi.Models;
 
 namespace MochiApi.Services
 {
@@ -9,10 +10,13 @@ namespace MochiApi.Services
         {
             _context = context;
         }
-
         public async Task<User?> GetById(int id)
         {
             return await _context.Users.FindAsync(id);
+        }
+        public async Task<IEnumerable<User>> SearchByEmail(string Email)
+        {
+            return await _context.Users.Where(u => u.Email.StartsWith(Email)).ToListAsync();
         }
     }
 }

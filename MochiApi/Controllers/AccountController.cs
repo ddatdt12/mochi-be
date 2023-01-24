@@ -11,23 +11,24 @@ using MochiApi.DTOs;
 namespace MochiApi.Controllers
 {
     [ApiController]
-    [Route("users")]
-    public class UserController : Controller
+    [Route("account")]
+    public class AccountController : Controller
     {
         public DataContext _context { get; set; }
         public IMapper _mapper { get; set; }
-        public UserController(DataContext context, IMapper mapper)
+        public AccountController(DataContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetUsers([MinLength(4, ErrorMessage = "At lease 4 characters")] string email)
+        [HttpGet("invitations")]
+        public async Task<IActionResult> GetInvitations([MinLength(4, ErrorMessage = "At lease 4 characters")] string email)
         {
-            var users = await _context.Users.Where(u => u.Email.Contains(email)).ToListAsync();
+            var userId = HttpContext.Items["UserId"] as int?;
+            var invitations = await _context.Invitations.Where(u => u.UserId == userId).ToListAsync();
 
-            var userDtos = _mapper.Map<IEnumerable<BasicUserDto>>(users);
+            var userDtos = _mapper.Map<IEnumerable<BasicUserDto>>(invitations);
             return Ok(new ApiResponse<IEnumerable<BasicUserDto>>(userDtos, "search users"));
         }
     }

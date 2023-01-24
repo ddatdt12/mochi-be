@@ -21,12 +21,10 @@ namespace MochiApi.Controllers
         public IWalletService _walletService { get; set; }
         public IMapper _mapper { get; set; }
 
-        IHubContext<NotiHub> _notiHub;
-        public WalletController(IWalletService walletSer, IMapper mapper, IHubContext<NotiHub> notiHub)
+        public WalletController(IWalletService walletSer, IMapper mapper)
         {
             _walletService = walletSer;
             _mapper = mapper;
-            _notiHub = notiHub;
         }
 
         [HttpGet]
