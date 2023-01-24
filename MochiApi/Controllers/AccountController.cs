@@ -28,8 +28,8 @@ namespace MochiApi.Controllers
             var userId = HttpContext.Items["UserId"] as int?;
             var invitations = await _context.Invitations.Where(u => u.UserId == userId).ToListAsync();
 
-            var userDtos = _mapper.Map<IEnumerable<BasicUserDto>>(invitations);
-            return Ok(new ApiResponse<IEnumerable<BasicUserDto>>(userDtos, "search users"));
+            var invitationDtos = _mapper.Map<IEnumerable<InvitationDto>>(invitations);
+            return Ok(new ApiResponse<IEnumerable<InvitationDto>>(invitationDtos, "Get invitations"));
         }
     }
 }

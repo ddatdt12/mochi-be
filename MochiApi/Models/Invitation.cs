@@ -7,6 +7,7 @@ namespace MochiApi.Models
         public Invitation()
         {
             CreatedAt = DateTime.UtcNow;
+            Status = InvitationStatus.New;
         }
         public int Id { get; set; }
         public DateTime CreatedAt { get; set; }

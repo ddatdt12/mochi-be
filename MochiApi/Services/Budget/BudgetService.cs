@@ -126,6 +126,7 @@ namespace MochiApi.Services
                 long beforeSpendAmout = budget.SpentAmount;
                 budget.SpentAmount += amount;
 
+                IEnumerable<Notification>? notisList = null;
                 if (beforeSpendAmout <= budget.LimitAmount && budget.SpentAmount > budget.LimitAmount)
                 {
                     var memberIds = await _context.WalletMembers.Where(wM => wM.WalletId == budget.WalletId).Select(wM => wM.UserId).ToArrayAsync();
@@ -141,18 +142,21 @@ namespace MochiApi.Services
                         Description = NotiTemplate.GetRemindBudgetExceedLimit(budget.Category?.Name ?? "", month, year),
                     });
 
-                    var notis = await _notiService.CreateListNoti(notisDto, false);
-
-                    var notisDtos = _mapper.Map<IEnumerable<NotificationDto>>(notis);
-                    foreach (var noti in notisDtos)
-                    {
-                        _ = _notiHub.Clients.User(noti.UserId.ToString()).SendAsync("Notification", noti);
-                    }
+                    notisList = await _notiService.CreateListNoti(notisDto, false);
                 }
 
                 if (saveChanges)
                 {
                     await _context.SaveChangesAsync();
+                }
+
+                if (notisList != null)
+                {
+                    var notisDtos = _mapper.Map<IEnumerable<NotificationDto>>(notisList);
+                    foreach (var noti in notisList)
+                    {
+                        _ = _notiHub.Clients.User(noti.UserId.ToString()).SendAsync("Notification", noti);
+                    }
                 }
             }
         }

@@ -16,6 +16,21 @@ namespace MochiApi.Hubs
             _mapper = mapper;
         }
 
+        public async Task Ping(string test)
+        {
+            try
+            {
+                var userId = Context.UserIdentifier;
+                System.Diagnostics.Debug.WriteLine("Check user send message: " + userId);
+
+                await Clients.Users(userId!).SendAsync("Pong", "Server reply " + test);
+            }
+            catch (Exception e)
+            {
+                throw new HubException(e.Message);
+            }
+        }
+
         //public async Task SendMessage(CreateMessageDto message)
         //{
         //    try
