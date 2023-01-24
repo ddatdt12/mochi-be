@@ -28,6 +28,7 @@ namespace MochiApi.Models
         public DbSet<Budget> Budgets => Set<Budget>();
         public DbSet<Event> Events => Set<Event>();
         public DbSet<Settings> Settings => Set<Settings>();
+        public DbSet<Notification> Notifcations => Set<Notification>();
         public override int SaveChanges()
         {
             AddTimestamps();

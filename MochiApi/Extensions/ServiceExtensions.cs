@@ -29,6 +29,7 @@ namespace MochiApi.Extensions
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IUserService, UserService>()
             .AddScoped<IMailService, MailService>()
+            .AddScoped<INotiService, NotiService>()
             .AddScoped<ICategoryService, CategoryService>()
             .AddScoped<IWalletService, WalletService>()
             .AddScoped<
@@ -81,6 +82,25 @@ namespace MochiApi.Extensions
                     ValidIssuer = configuration["JWT:Issuer"],
                     ValidAudience = configuration["JWT:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Key)
+                };
+
+                //For hubs chat
+                o.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            path.StartsWithSegments("/hubs/noti"))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
         }

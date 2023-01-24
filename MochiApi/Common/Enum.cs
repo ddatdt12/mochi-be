@@ -41,5 +41,13 @@ namespace MochiApi.Common
             Light,
             Dark
         }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum NotificationType
+        {
+            BudgetExceed,
+            Reminder,
+            JoinWalletInvitation
+        }
     }
 }

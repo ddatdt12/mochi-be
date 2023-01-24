@@ -3,7 +3,6 @@ using MochiApi.Models;
 
 namespace MochiApi.Services
 {
-
     public interface ICategoryService
     {
         public Task<IEnumerable<Category>> GetCategories(int walletId);

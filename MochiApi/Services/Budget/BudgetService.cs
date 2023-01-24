@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MochiApi.Dtos;
 using MochiApi.Error;
+using MochiApi.Helper;
+using MochiApi.Hubs;
 using MochiApi.Models;
 using System.Linq.Expressions;
 
@@ -11,13 +14,18 @@ namespace MochiApi.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        IHubContext<NotiHub> _notiHub;
+        INotiService _notiService;
+
         public DataContext _context { get; set; }
 
-        public BudgetService(IConfiguration configuration, DataContext context, IMapper mapper)
+        public BudgetService(IConfiguration configuration, DataContext context, IMapper mapper, IHubContext<NotiHub> notiHub, INotiService notiService)
         {
             _configuration = configuration;
             _context = context;
             _mapper = mapper;
+            _notiHub = notiHub;
+            _notiService = notiService;
         }
 
         public async Task<IEnumerable<Budget>> GetBudgets(int walletId, int month, int year)
@@ -115,7 +123,32 @@ namespace MochiApi.Services
 
             if (budget != null)
             {
+                long beforeSpendAmout = budget.SpentAmount;
                 budget.SpentAmount += amount;
+
+                if (beforeSpendAmout <= budget.LimitAmount && budget.SpentAmount > budget.LimitAmount)
+                {
+                    var memberIds = await _context.WalletMembers.Where(wM => wM.WalletId == budget.WalletId).Select(wM => wM.UserId).ToArrayAsync();
+
+                    await _context.Entry(budget).Reference(b => b.Category).LoadAsync();
+
+                    var notisDto = memberIds.Select(id => new CreateNotificationDto
+                    {
+                        UserId = id,
+                        BudgetId = budget.Id,
+                        WalletId = budget.WalletId,
+                        Type = Common.Enum.NotificationType.BudgetExceed,
+                        Description = NotiTemplate.GetRemindBudgetExceedLimit(budget.Category?.Name ?? "", month, year),
+                    });
+
+                    var notis = await _notiService.CreateListNoti(notisDto, false);
+
+                    foreach (var noti in notis)
+                    {
+                        _ = _notiHub.Clients.User(noti.UserId.ToString()).SendAsync("Notification", noti);
+                    }
+                }
+
                 if (saveChanges)
                 {
                     await _context.SaveChangesAsync();
