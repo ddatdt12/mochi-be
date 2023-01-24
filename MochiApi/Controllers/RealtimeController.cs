@@ -26,7 +26,6 @@ namespace MochiApi.Controllers
             _notiHub = notiHub;
         }
 
-        [HttpGet]
         public async Task<IActionResult> Invoke()
         {
             var userids = await _context.Users.Select(u => u.Id.ToString()).ToListAsync();

@@ -40,6 +40,7 @@ namespace MochiApi.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim("UserId", user.Id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 }),
                 Expires = DateTime.Now.AddMonths(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey), SecurityAlgorithms.HmacSha256Signature)

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using MochiApi.Attributes;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text.Json;
@@ -15,7 +16,7 @@ namespace MochiApi.Hubs
         {
             _mapper = mapper;
         }
-
+        [Protect]
         public async Task Ping(string test)
         {
             try
@@ -23,7 +24,7 @@ namespace MochiApi.Hubs
                 var userId = Context.UserIdentifier;
                 System.Diagnostics.Debug.WriteLine("Check user send message: " + userId);
 
-                await Clients.Users(userId!).SendAsync("Pong", "Server reply " + test);
+                await Clients.Users(userId!).SendAsync("Pong", "Server reply " + userId);
             }
             catch (Exception e)
             {
