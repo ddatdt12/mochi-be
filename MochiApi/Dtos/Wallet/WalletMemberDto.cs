@@ -1,23 +1,23 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using static MochiApi.Common.Enum;
 
-namespace MochiApi.Models
+namespace MochiApi.Dtos
 {
-    [Table("WalletMember")]
-    public class WalletMember
+    public class WalletMemberDto
     {
-        public WalletMember()
+        public WalletMemberDto()
         {
             Role = MemberRole.Member;
             JoinAt = DateTime.UtcNow;
             Status = MemberStatus.Pending;
         }
         public int UserId { get; set; }
-        public User? User { get; set; }
+        public UserDto? User { get; set; }
         public int WalletId { get; set; }
-        public Wallet? Wallet { get; set; }
+        public WalletDto? Wallet { get; set; }
         public MemberStatus Status { get; set; }
         public MemberRole Role { get; set; }
         public DateTime JoinAt { get; set; }
+
     }
 }

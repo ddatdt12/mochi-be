@@ -30,7 +30,7 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> GetTransactions(int walletId, [FromQuery] TransactionFilterDto filter)
         {
             var userId = HttpContext.Items["UserId"] as int?;
-            if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId))
+            if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
             {
                 throw new ApiException("Access denied!", 400);
             }

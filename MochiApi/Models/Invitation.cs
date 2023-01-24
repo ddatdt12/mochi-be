@@ -1,7 +1,9 @@
-﻿using static MochiApi.Common.Enum;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using static MochiApi.Common.Enum;
 
 namespace MochiApi.Models
 {
+    [Table("Invitation")]
     public class Invitation
     {
         public Invitation()

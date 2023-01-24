@@ -129,7 +129,9 @@ namespace MochiApi.Services
                 IEnumerable<Notification>? notisList = null;
                 if (beforeSpendAmout <= budget.LimitAmount && budget.SpentAmount > budget.LimitAmount)
                 {
-                    var memberIds = await _context.WalletMembers.Where(wM => wM.WalletId == budget.WalletId).Select(wM => wM.UserId).ToArrayAsync();
+                    var memberIds = await _context.WalletMembers
+                    .Where(wM => wM.WalletId == budget.WalletId && wM.Status == Common.Enum.MemberStatus.Accepted)
+                    .Select(wM => wM.UserId).ToArrayAsync();
 
                     await _context.Entry(budget).Reference(b => b.Category).LoadAsync();
 

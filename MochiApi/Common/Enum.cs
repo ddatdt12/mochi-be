@@ -57,5 +57,19 @@ namespace MochiApi.Common
             Accepted,
             Declined
         }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum InvitationAction
+        {
+            Accept,
+            Decline
+        }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum MemberStatus
+        {
+            Accepted,
+            Declined,
+            Pending
+        }
     }
 }

@@ -874,7 +874,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("Invitations");
+                    b.ToTable("Invitation");
                 });
 
             modelBuilder.Entity("MochiApi.Models.Notification", b =>
@@ -1118,6 +1118,9 @@ namespace MochiApi.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.HasKey("UserId", "WalletId");
 
                     b.HasIndex("WalletId");
@@ -1130,28 +1133,32 @@ namespace MochiApi.Migrations
                             UserId = 1,
                             WalletId = 1,
                             JoinAt = new DateTime(2022, 12, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Role = 0
+                            Role = 0,
+                            Status = 2
                         },
                         new
                         {
                             UserId = 2,
                             WalletId = 2,
                             JoinAt = new DateTime(2022, 12, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Role = 0
+                            Role = 0,
+                            Status = 2
                         },
                         new
                         {
                             UserId = 3,
                             WalletId = 3,
                             JoinAt = new DateTime(2022, 12, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Role = 0
+                            Role = 0,
+                            Status = 2
                         },
                         new
                         {
                             UserId = 4,
                             WalletId = 4,
                             JoinAt = new DateTime(2022, 12, 29, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Role = 0
+                            Role = 0,
+                            Status = 2
                         });
                 });
 

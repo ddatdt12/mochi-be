@@ -46,7 +46,7 @@ namespace MochiApi.Services
 
                 await _context.SaveChangesAsync();
 
-                var cates = await _context.Categories.Where(c => c.WalletId == walletDto.ClonedCategoryWalletId).ToListAsync();
+                var cates = await _context.Categories.AsNoTracking().Where(c => c.WalletId == walletDto.ClonedCategoryWalletId).ToListAsync();
 
                 cates.ForEach(c =>
                 {
@@ -60,6 +60,7 @@ namespace MochiApi.Services
                     UserId = userId,
                     Role = MemberRole.Admin,
                     WalletId = wallet.Id,
+                    Status = MemberStatus.Accepted
                 });
 
                 members.AddRange(walletDto.MemberIds.Select(mId =>
@@ -68,7 +69,9 @@ namespace MochiApi.Services
                     WalletId = wallet.Id,
                     Role = MemberRole.Member,
                     UserId = mId,
-                }));
+                }).ToList());
+                await _context.WalletMembers.AddRangeAsync(members);
+                await _context.Categories.AddRangeAsync(cates);
 
                 IEnumerable<Notification>? notis = null;
                 //Invitations
@@ -83,10 +86,10 @@ namespace MochiApi.Services
                         Status = InvitationStatus.New,
                         ExpirationDate = now.AddDays(7),
                         WalletId = wallet.Id
-                    });
-
-                    await _context.Invitations.AddRangeAsync(invitations);
-                    await _context.SaveChangesAsync();
+                    }).ToList();
+              
+                    await _context.Invitations.BulkInsertAsync(invitations);
+                    await _context.BulkSaveChangesAsync();
                     notis = invitations.Select(i => new Notification
                     {
                         InvitationId = i.Id,
@@ -96,8 +99,7 @@ namespace MochiApi.Services
                     });
                     await _context.Notifcations.AddRangeAsync(notis);
                 }
-                await _context.WalletMembers.AddRangeAsync(members);
-                await _context.Categories.AddRangeAsync(cates);
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 if (notis != null)
@@ -143,9 +145,30 @@ namespace MochiApi.Services
 
         public async Task<bool> VerifyIsUserInWallet(int walletId, int userId)
         {
-            var exist = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).AnyAsync();
+            var exist = await _context.Wallets.Where(w => w.Id == walletId &&
+            w.WalletMembers.Any(m => m.UserId == userId && m.Status == MemberStatus.Accepted)).AnyAsync();
 
             return exist;
+        }
+        public async Task<IEnumerable<WalletMember>> GetUsersInWallet(int walletId, int userId)
+        {
+            var walletMembers = await _context.WalletMembers.Where(wM => wM.WalletId == walletId).Include(wM => wM.User).ToListAsync();
+
+            return walletMembers;
+        }
+        public async Task DeleteMemberInWallet(int userId, int walletId, int memberId)
+        {
+            var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == memberId).FirstOrDefaultAsync();
+            var owner = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == userId).FirstOrDefaultAsync();
+            if (member == null)
+            {
+                throw new ApiException("User not found", 404);
+            }
+            if (owner!.Role != MemberRole.Admin)
+            {
+                throw new ApiException("You are not authorized to delete user", 400);
+            }
+            _context.WalletMembers.Remove(member);
         }
 
     }

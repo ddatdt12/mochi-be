@@ -10,5 +10,7 @@ namespace MochiApi.Services
         public Task UpdateWallet(int walletId, int userid, UpdateWalletDto updateWallet);
         Task<bool> VerifyIsUserInWallet(int walletId, int userId);
         Task DeleteWallet(int walletId, int userId);
+        Task<IEnumerable<WalletMember>> GetUsersInWallet(int walletId, int userId);
+        Task DeleteMemberInWallet(int userId, int walletId, int memberId);
     }
 }
