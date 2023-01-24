@@ -44,7 +44,6 @@ namespace MochiApi.Controllers
             return Ok(new ApiResponse<object>(budgetDtos, "Get budgets successfully!"));
         }
         [HttpGet("{id}/transactions")]
-        [Produces(typeof(ApiResponse<IEnumerable<BudgetDto>>))]
         public async Task<IActionResult> GetTransactionsInBudget(int id, int walletId, [FromQuery, Required] int month, [FromQuery, Required] int year)
         {
             var userId = HttpContext.Items["UserId"] as int?;
@@ -103,7 +102,7 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet("{id}/summary")]
-        [Produces(typeof(ApiResponse<BudgetDto>))]
+        [Produces(typeof(ApiResponse<BudgetDetailSummary>))]
         public async Task<IActionResult> SummaryBudgetDetail(int id, int walletId, [FromQuery] int month, [FromQuery] int year)
         {
             var userId = HttpContext.Items["UserId"] as int?;
@@ -117,7 +116,7 @@ namespace MochiApi.Controllers
         }
         
         [HttpGet("{id}/statistic")]
-        [Produces(typeof(ApiResponse<BudgetDto>))]
+        [Produces(typeof(ApiResponse<IEnumerable<BudgetDetailStatistic>>))]
         public async Task<IActionResult> StatisticBudgetDetail(int id, int walletId, [FromQuery] int month, [FromQuery] int year)
         {
             var userId = HttpContext.Items["UserId"] as int?;
