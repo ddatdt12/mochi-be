@@ -143,7 +143,8 @@ namespace MochiApi.Services
 
                     var notis = await _notiService.CreateListNoti(notisDto, false);
 
-                    foreach (var noti in notis)
+                    var notisDtos = _mapper.Map<IEnumerable<NotificationDto>>(notis);
+                    foreach (var noti in notisDtos)
                     {
                         _ = _notiHub.Clients.User(noti.UserId.ToString()).SendAsync("Notification", noti);
                     }
@@ -192,14 +193,14 @@ namespace MochiApi.Services
 
 
             int remainDaysOfMonth = DateTime.DaysInMonth(year, month) - DateTime.UtcNow.Day;
-            var realDailyExpense = budget.SpentAmount / DateTime.UtcNow.Day;
+            double realDailyExpense = budget.SpentAmount * 1.0 / DateTime.UtcNow.Day;
             var summary = new BudgetDetailSummary
             {
                 ExpectedExpense = realDailyExpense * remainDaysOfMonth + budget.SpentAmount,
                 RealDailyExpense = realDailyExpense,
                 TotalBudget = budget.LimitAmount,
                 TotalSpentAmount = budget.SpentAmount,
-                RecommendedDailyExpense = budget.RemainingAmount / realDailyExpense,
+                RecommendedDailyExpense = remainDaysOfMonth == 0 ? 0 : budget.RemainingAmount / remainDaysOfMonth,
             };
 
             return summary;

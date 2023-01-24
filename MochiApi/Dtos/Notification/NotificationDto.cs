@@ -18,7 +18,7 @@ namespace MochiApi.Dtos
         public int UserId { get; set; }
         public UserDto? User { get; set; }
         public int? WalletId { get; set; }
-        public Wallet? Wallet { get; set; }
+        public WalletDto? Wallet { get; set; }
         public int? TransactionId { get; set; }
         public TransactionDto? Transaction { get; set; }
         public int? BudgetId { get; set; }

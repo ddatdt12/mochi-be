@@ -25,6 +25,7 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet]
+        [Produces(typeof(ApiResponse<IEnumerable<NotificationDto>>))]
         public async Task<IActionResult> GetNotis()
         {
             var userId = HttpContext.Items["UserId"] as int?;
