@@ -182,7 +182,7 @@ namespace MochiApi.Services
                 throw new ApiException("Wallet not found!", 400);
             }
 
-            wallet.Balance -= amount;
+            wallet.Balance += amount;
         }
     }
 }
