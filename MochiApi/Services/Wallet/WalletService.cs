@@ -87,7 +87,7 @@ namespace MochiApi.Services
                         ExpirationDate = now.AddDays(7),
                         WalletId = wallet.Id
                     }).ToList();
-              
+
                     await _context.Invitations.BulkInsertAsync(invitations);
                     await _context.BulkSaveChangesAsync();
                     notis = invitations.Select(i => new Notification
@@ -171,5 +171,18 @@ namespace MochiApi.Services
             _context.WalletMembers.Remove(member);
         }
 
+        public async Task UpdateWalletBalance(int walletId, int amount)
+        {
+            var wallet = await _context.Wallets
+            .Where(w => w.Id == walletId)
+            .FirstOrDefaultAsync();
+
+            if (wallet == null)
+            {
+                throw new ApiException("Wallet not found!", 400);
+            }
+
+            wallet.Balance -= amount;
+        }
     }
 }

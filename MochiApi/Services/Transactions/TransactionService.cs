@@ -10,15 +10,17 @@ namespace MochiApi.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IBudgetService _budgetService;
+        private readonly IWalletService _walletService;
         private readonly IMapper _mapper;
         public DataContext _context { get; set; }
 
-        public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper, IBudgetService budgetService)
+        public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper, IBudgetService budgetService, IWalletService walletService)
         {
             _configuration = configuration;
             _context = context;
             _mapper = mapper;
             _budgetService = budgetService;
+            _walletService = walletService;
         }
 
         public async Task<IEnumerable<Transaction>> GetTransactions(int walletId, TransactionFilterDto filter)
@@ -45,7 +47,7 @@ namespace MochiApi.Services
                 var EndDate = filter.EndDate?.Date.AddDays(1).AddSeconds(-1);
                 transQuery = transQuery.Where(t => t.CreatedAt <= EndDate);
             }
-      
+
 
             var trans = await transQuery.ToListAsync();
             return trans;
@@ -58,8 +60,15 @@ namespace MochiApi.Services
             trans.CreatorId = userId;
             trans.WalletId = walletId;
 
+            int amount = transDto.Amount;
+            var cate = await _context.Categories.Where(c => c.Id == trans.CategoryId).FirstOrDefaultAsync();
             await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                 trans.CreatedAt.Year, trans.Amount, saveChanges: false);
+            if (cate!.Type == Common.Enum.CategoryType.Expense)
+            {
+                amount *= -1;
+            }
+            await _walletService.UpdateWalletBalance(walletId, amount);
 
             await _context.Transactions.AddAsync(trans);
             await _context.SaveChangesAsync();
@@ -69,7 +78,10 @@ namespace MochiApi.Services
 
         public async Task UpdateTransaction(int transactionId, int walletId, UpdateTransactionDto updateTransDto)
         {
-            var trans = await _context.Transactions.Where(t => t.Id == transactionId && t.WalletId == walletId).FirstOrDefaultAsync();
+            var trans = await _context.Transactions
+            .Where(t => t.Id == transactionId && t.WalletId == walletId)
+            .Include(t => t.Category)
+            .FirstOrDefaultAsync();
             if (trans == null)
             {
                 throw new ApiException("Transaction not found!", 400);
@@ -82,11 +94,31 @@ namespace MochiApi.Services
 
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                 trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+
+                var updatedCate = await _context.Categories.Where(c => c.Id == updateTransDto.CategoryId).FirstOrDefaultAsync();
+                int amount = trans.Amount;
+                int updatedAmount = updateTransDto.Amount;
+                if (updatedCate!.Type == Common.Enum.CategoryType.Expense)
+                {
+                    updatedAmount *= -1;
+                }
+                if (trans.Category!.Type == Common.Enum.CategoryType.Income)
+                {
+                    amount *= -1;
+                }
+                await _walletService.UpdateWalletBalance(walletId, amount + updatedAmount);
             }
             else if (updateTransDto.Amount != trans.Amount)
             {
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-    updateTransDto.CreateAtValue.Year, updateTransDto.Amount - trans.Amount, saveChanges: false);
+        updateTransDto.CreateAtValue.Year, updateTransDto.Amount - trans.Amount, saveChanges: false);
+
+                int amount = updateTransDto.Amount - trans.Amount;
+                if (trans.Category!.Type == Common.Enum.CategoryType.Expense)
+                {
+                    amount *= -1;
+                }
+                await _walletService.UpdateWalletBalance(walletId, amount);
             }
 
             _mapper.Map(updateTransDto, trans);
@@ -96,7 +128,7 @@ namespace MochiApi.Services
 
         public async Task DeleteTransaction(int transactionId)
         {
-            var trans = await _context.Transactions.Where(t => t.Id == transactionId).FirstOrDefaultAsync();
+            var trans = await _context.Transactions.Where(t => t.Id == transactionId).Include(t => t.Category).FirstOrDefaultAsync();
             if (trans == null)
             {
                 throw new ApiException("Transaction not found!", 400);
@@ -104,6 +136,13 @@ namespace MochiApi.Services
 
             await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                 trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+
+            int amount = trans.Amount - trans.Amount;
+            if (trans.Category!.Type == Common.Enum.CategoryType.Income)
+            {
+                amount *= -1;
+            }
+            await _walletService.UpdateWalletBalance(trans.WalletId, amount);
 
             _context.Transactions.Remove(trans);
             await _context.SaveChangesAsync();
