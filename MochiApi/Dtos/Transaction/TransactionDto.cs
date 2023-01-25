@@ -17,6 +17,6 @@
         public CategoryDto? Category { get; set; }
         public DateTime CreatedAt{ get; set; }
         public int? EventId { get; set; }
-
+        public string? Image { get; set; }
     }
 }
