@@ -40,7 +40,7 @@ namespace MochiApi.Controllers
                 throw new ApiException("End date must be greater than start date", 400);
             }
 
-            int duration = endDate.Subtract(startDate).Days;
+            int duration = endDate.Subtract(startDate).Days + 1;
 
             if (duration > 35)
             {
@@ -77,6 +77,20 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> GetSpendingReport(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopSpending = true)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
+            startDate = startDate.Date;
+            endDate = endDate.Date;
+            if (startDate >= endDate)
+            {
+                throw new ApiException("End date must be greater than start date", 400);
+            }
+
+            int duration = endDate.Subtract(startDate).Days + 1;
+
+            if (duration > 35)
+            {
+                throw new ApiException("End date can not be greater than start time 35 days", 400);
+            }
+
             endDate = endDate.AddDays(1).AddSeconds(-1);
             var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.Category!.Type == CategoryType.Expense && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
           
@@ -117,6 +131,21 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> GetIncomeReport(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopIncome = true)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
+            startDate = startDate.Date;
+            endDate = endDate.Date;
+            if (startDate >= endDate)
+            {
+                throw new ApiException("End date must be greater than start date", 400);
+            }
+
+            int duration = endDate.Subtract(startDate).Days + 1;
+
+            if (duration > 35)
+            {
+                throw new ApiException("End date can not be greater than start time 35 days", 400);
+            }
+
+
             endDate = endDate.AddDays(1).AddSeconds(-1);
             var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.Category!.Type == CategoryType.Income && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
 
