@@ -25,7 +25,8 @@ namespace MochiApi.Services
 
         public async Task<IEnumerable<Notification>> GetNotifications(int userId)
         {
-            var notis = await _context.Notifcations.Where(no => no.UserId == userId).OrderByDescending(c => c.CreatedAt).ToListAsync();
+            var notis = await _context.Notifcations.Where(no => no.UserId == userId)
+            .OrderByDescending(c => c.CreatedAt).Include(c => c.Wallet).ToListAsync();
 
             return notis;
         }
