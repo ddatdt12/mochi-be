@@ -50,7 +50,9 @@ namespace MochiApi.Controllers
                     {
                         totalIncome += transaction.Amount;
                         revenue += transaction.Amount;
-                    }else{
+                    }
+                    else
+                    {
                         totalExpense += transaction.Amount;
                         revenue -= transaction.Amount;
                     }
@@ -61,11 +63,29 @@ namespace MochiApi.Controllers
                 response.Add(item);
             }
 
-            return Ok(new ApiResponse<object>(new {
+            return Ok(new ApiResponse<object>(new
+            {
                 totalIncome,
                 totalExpense,
                 details = response
             }, "Get transaction statistic group by date successfully!"));
+        }
+
+        [HttpGet("recently")]
+        [Produces(typeof(IEnumerable<TransactionDto>))]
+        public async Task<IActionResult> GetRecentlyTransactions(int walletId, [FromQuery] TransactionFilterDto filter)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
+            if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
+            {
+                throw new ApiException("Access denied!", 400);
+            }
+
+            filter.Skip = 0;
+            filter.Take = 5;
+            var transList = await _transactionService.GetTransactions(walletId, filter);
+            var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
+            return Ok(new ApiResponse<object>(transRes, "Get recently transactions successfully!"));
         }
 
         [HttpPost]

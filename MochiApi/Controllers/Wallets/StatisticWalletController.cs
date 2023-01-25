@@ -4,88 +4,153 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MochiApi.Attributes;
 using MochiApi.Dtos;
+using MochiApi.Dtos.Statistic;
 using MochiApi.DTOs;
 using MochiApi.Error;
 using MochiApi.Hubs;
 using MochiApi.Models;
 using MochiApi.Services;
 using Newtonsoft.Json;
+using static MochiApi.Common.Enum;
 
 namespace MochiApi.Controllers
 {
     [ApiController]
-    [Route("api/wallets/statistic")]
+    [Route("api/wallets/{id}/statistic")]
     [Protect]
     public class StatisticWalletController : Controller
     {
-        public IWalletService _walletService { get; set; }
+        public DataContext _context { get; set; }
         public IMapper _mapper { get; set; }
 
-        public StatisticWalletController(IWalletService walletSer, IMapper mapper)
+        public StatisticWalletController(IMapper mapper, DataContext context)
         {
-            _walletService = walletSer;
             _mapper = mapper;
+            _context = context;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetWallets()
+        [HttpGet("group")]
+        public async Task<IActionResult> GetReportGroupByDate(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-            var wallets = await _walletService.GetWallets(userId);
-            var walletsRes = _mapper.Map<IEnumerable<WalletDto>>(wallets);
-            return Ok(new ApiResponse<IEnumerable<WalletDto>>(walletsRes, "Get my wallets successfully!"));
+            startDate = startDate.Date;
+            endDate = endDate.Date;
+            if (startDate >= endDate)
+            {
+                throw new ApiException("End date must be greater than start date", 400);
+            }
 
+            int duration = endDate.Subtract(startDate).Days;
 
+            if (duration > 35)
+            {
+                throw new ApiException("End date can not be greater than start time 35 days", 400);
+            }
+            List<DailyReport> listDailyReport = new List<DailyReport>();
+            endDate = endDate.AddDays(1).AddSeconds(-1);
+            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
+
+            var dailyReportMap = (await transQuery.GroupBy(t => t.CreatedAt.Date).Select(gr =>
+            new DailyReport
+            {
+                Date = gr.Key,
+                Expense = gr.Where(i => i.Category!.Type == CategoryType.Expense).Sum(t => t.Amount),
+                Income = gr.Where(i => i.Category!.Type == CategoryType.Income).Sum(t => t.Amount),
+            }).ToListAsync()).ToDictionary(r => r.Date, r => r);
+
+            for (int i = 0; i < duration; i++)
+            {
+                DateTime date = startDate.AddDays(i);
+                var report = dailyReportMap.ContainsKey(date) ? dailyReportMap[date] : new DailyReport { Date = date, Income = 0, Expense = 0 };
+                listDailyReport.Add(report);
+            }
+       
+            long netIncome = dailyReportMap.Values.Sum(t => t.Income - t.Expense);
+
+            return Ok(new ApiResponse<object>(new
+            {
+                dailyReports = listDailyReport,
+                netIncome = netIncome,
+            }, "Get report of wallet successfully!"));
         }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateWallet([FromBody] CreateWalletDto createWalletDto)
+        [HttpGet("expense")]
+        public async Task<IActionResult> GetSpendingReport(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopSpending = true)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-            var wallet = await _walletService.CreateWallet(userId, createWalletDto);
-            var walletDto = _mapper.Map<WalletDto>(wallet);
+            endDate = endDate.AddDays(1).AddSeconds(-1);
+            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.Category!.Type == CategoryType.Expense && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
+          
+            var listTopSpending = new List<CategoryStat>();
+            if (showTopSpending)
+            {
+                listTopSpending = (await transQuery.GroupBy(t => t.CategoryId).Select(gr =>
+                new
+                {
+                    CategoryId = gr.Key,
+                    Amount = gr.Sum(t => t.Amount),
+                    Category = gr.FirstOrDefault()!.Category!,
+                }
+                ).ToListAsync()).Select(i => new CategoryStat
+                {
+                    Category = new CategoryDto
+                    {
+                        Id = i.Category.Id,
+                        Icon = i.Category.Icon,
+                        Name = i.Category.Name,
+                        Type = i.Category.Type,
+                        Group = i.Category.Group
+                    },
+                    Amount = i.Amount
+                }).ToList();
+            }
 
-            return Ok(new ApiResponse<WalletDto>(walletDto, "Create wallet successfully!"));
+            long expense = await transQuery.SumAsync(t => t.Amount);
+
+            return Ok(new ApiResponse<object>(new
+            {
+                details = listTopSpending,
+                totalAmount = expense,
+            }, "statistic wallet successfully!"));
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateWallet(int id, [FromBody] UpdateWalletDto updateWallet)
+        [HttpGet("income")]
+        public async Task<IActionResult> GetIncomeReport(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopIncome = true)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
+            endDate = endDate.AddDays(1).AddSeconds(-1);
+            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.Category!.Type == CategoryType.Income && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
 
-            await _walletService.UpdateWallet(id, userId, updateWallet);
-            return NoContent();
+            var incomes = new List<CategoryStat>();
+            if (showTopIncome)
+            {
+                incomes = (await transQuery.GroupBy(t => t.CategoryId).Select(gr =>
+                new
+                {
+                    CategoryId = gr.Key,
+                    Amount = gr.Sum(t => t.Amount),
+                    Category = gr.FirstOrDefault()!.Category!,
+                }
+                ).ToListAsync()).Select(i => new CategoryStat
+                {
+                    Category = new CategoryDto
+                    {
+                        Id = i.Category.Id,
+                        Icon = i.Category.Icon,
+                        Name = i.Category.Name,
+                        Type = i.Category.Type,
+                        Group = i.Category.Group
+                    },
+                    Amount = i.Amount
+                }).ToList();
+            }
+
+            long expense = await transQuery.SumAsync(t => t.Amount);
+
+            return Ok(new ApiResponse<object>(new
+            {
+                details = incomes,
+                totalAmount = expense,
+            }, "statistic wallet successfully!"));
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteWallet(int id)
-        {
-            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-
-            await _walletService.DeleteWallet(id, userId);
-
-            return NoContent();
-        }
-
-        [HttpGet("{id}/members")]
-        [Produces(typeof(ApiResponse<WalletMemberDto>))]
-        public async Task<IActionResult> GetMembersOfWallet(int id)
-        {
-            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-
-            var members = await _walletService.GetUsersInWallet(id, userId);
-            return Ok(new ApiResponse<object>(members, "Get Members of wallet"));
-        }
-
-        [HttpDelete("{id}/members/{memberId}")]
-        [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> GetMembersOfWallet(int id, int memberId)
-        {
-            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-
-            await _walletService.DeleteMemberInWallet(userId, id, memberId);
-            return NoContent();
-        }
-
     }
 }

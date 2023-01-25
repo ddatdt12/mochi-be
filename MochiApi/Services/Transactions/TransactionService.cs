@@ -48,6 +48,16 @@ namespace MochiApi.Services
                 transQuery = transQuery.Where(t => t.CreatedAt <= EndDate);
             }
 
+            if (filter.Skip.HasValue)
+            {
+                transQuery = transQuery.Skip(filter.Skip.Value);
+            }
+            
+            if (filter.Take.HasValue)
+            {
+                transQuery = transQuery.Take(filter.Take.Value);
+            }
+
 
             var trans = await transQuery.ToListAsync();
             return trans;
