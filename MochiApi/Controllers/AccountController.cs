@@ -25,7 +25,8 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet("invitations")]
-        public async Task<IActionResult> GetInvitations([MinLength(4, ErrorMessage = "At lease 4 characters")] string email)
+        [Produces(typeof(IEnumerable<InvitationDto>))]
+        public async Task<IActionResult> GetInvitations()
         {
             var userId = HttpContext.Items["UserId"] as int?;
             var invitations = await _context.Invitations.Where(u => u.UserId == userId).ToListAsync();
