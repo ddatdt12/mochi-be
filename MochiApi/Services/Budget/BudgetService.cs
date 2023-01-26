@@ -36,6 +36,14 @@ namespace MochiApi.Services
 
             return budgets;
         }
+        public async Task<Budget> GetBudgetById(int id, int walletId, int month, int year)
+        {
+            var budget = await _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year)
+            .Include(b => b.Category)
+            .FirstOrDefaultAsync();
+
+            return budget;
+        }
         public async Task<BudgetSummary> SummaryBudget(int walletId, int month, int year)
         {
             var budgetsQuery = _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year);
@@ -210,14 +218,6 @@ namespace MochiApi.Services
             };
 
             return summary;
-        }
-
-        async Task<Budget?> IBudgetService.GetBudget(int id, int walletId, int month, int year)
-        {
-            var budget = await _context.Budgets.AsNoTracking().Where(b => b.Id == id && b.WalletId == walletId && b.Month == month && b.Year == year)
-                 .FirstOrDefaultAsync();
-
-            return budget;
         }
 
         async Task<IEnumerable<BudgetDetailStatistic>> IBudgetService.StatisticBudget(int id, int walletId, int month, int year)
