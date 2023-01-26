@@ -1,5 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MochiApi.Attributes;
 using MochiApi.Dtos;
 using MochiApi.Dtos.Auth;
 using MochiApi.Dtos.User;
@@ -22,6 +24,16 @@ namespace MochiApi.Controllers
             _auth = auth;
             _context = context;
             _mapper = mapper;
+        }
+        [HttpGet]
+        [Produces(typeof(ApiResponse<UserDto>))]
+        [Protect]
+        public IActionResult Auth()
+        {
+            var user = (User)(HttpContext.Items["User"] as User)!;
+            //var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+            var userDTO = _mapper.Map<UserDto>(user);
+            return Ok(new ApiResponse<object>(userDTO, "Authentication successfully"));
         }
         [HttpPost("login")]
         [Produces(typeof(ApiResponse<UserDto>))]
@@ -49,7 +61,7 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> VerifyEmailToken([FromBody] TokenDTO tokenDTO)
         {
             (User user, string token) = await _auth.VerifyEmailToken(tokenDTO);
-            var userDTO = _mapper.Map<UserDto>(user); 
+            var userDTO = _mapper.Map<UserDto>(user);
             return Ok(new ApiResponse<UserDto>(userDTO, "Verify account successfully!"));
         }
 
