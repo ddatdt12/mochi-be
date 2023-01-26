@@ -16,7 +16,7 @@ namespace MochiApi.Controllers
     public class EventController : Controller
     {
         public IWalletService _walletService { get; set; }
-        public IEventService _eventService{ get; set; }
+        public IEventService _eventService { get; set; }
         public IMapper _mapper { get; set; }
         public DataContext _context { get; set; }
         public EventController(IMapper mapper, IWalletService walletService, DataContext context, IEventService eventService)
@@ -27,71 +27,66 @@ namespace MochiApi.Controllers
             _eventService = eventService;
         }
 
-        //[HttpGet]
-        //public async Task<IActionResult> GetEvents()
-        //{
-        //    var userId = HttpContext.Items["UserId"] as int?;
+        [HttpGet]
+        [Produces(typeof(ApiResponse<EventDto>))]
+        public async Task<IActionResult> GetEvents([FromQuery] int? walletId)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
+
+            IEnumerable<Event> events;
+            if (walletId.HasValue)
+            {
+                events = await _eventService.GetEventsOfWallet((int)userId!, (int)walletId);
+            }
+            else
+            {
+                events = await _eventService.GetEvents((int)userId!);
+            }
+            var eventDtos = _mapper.Map<IEnumerable<EventDto>>(events);
+            return Ok(new ApiResponse<object>(eventDtos, "Get my events successfully!"));
+        }
 
 
-        //    var eventDtos = _mapper.Map<IEnumerable<EventDto>>(events);
-        //    return Ok(new ApiResponse<object>(eventDtos, "Get my events successfully!"));
-        //}
+        [HttpPost]
+        [Produces(typeof(ApiResponse<EventDto>))]
+        public async Task<IActionResult> CreateTransaction([FromBody] CreateEventDto createDto)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
 
+            var @event = await _eventService.CreateEvent((int)userId!, createDto);
 
-        //[HttpPost]
-        //[Produces(typeof(ApiResponse<TransactionDto>))]
-        //public async Task<IActionResult> CreateTransaction(int walletId, [FromBody] CreateTransactionDto createTransactionDto)
-        //{
-        //    var user = HttpContext.Items["User"] as User;
-        //    var userId = HttpContext.Items["UserId"] as int?;
-        //    if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId))
-        //    {
-        //        throw new ApiException("Access denied!", 400);
-        //    }
-        //    if (!await _categoryService.VerifyIsCategoryOfWallet(createTransactionDto.CategoryId, walletId))
-        //    {
-        //        throw new ApiException("Invalid category!", 400);
-        //    }
+            var @eventRes = _mapper.Map<EventDto>(@event);
+            return new CreatedResult("", new ApiResponse<EventDto>(@eventRes, "Create successfully"));
+        }
 
-        //    var trans = await _transactionService.CreateTransaction((int)userId, walletId, createTransactionDto);
+        [HttpPut("{id}")]
+        [Produces(typeof(NoContentResult))]
+        public async Task<IActionResult> UpdateTransaction(int id, [FromBody] UpdateEventDto updateDto)
+        {
+            var userId = Convert.ToInt32(HttpContext.Items["UserId"] as int?);
 
-        //    var transRes = _mapper.Map<TransactionDto>(trans);
-        //    return new CreatedResult("", new ApiResponse<TransactionDto>(transRes, "Create successfully"));
-        //}
+            await _eventService.UpdateEvent(userId, id, updateDto);
+            return NoContent();
+        }
 
-        //[HttpPut("{id}")]
-        //[Produces(typeof(NoContentResult))]
-        //public async Task<IActionResult> UpdateTransaction(int id, int walletId, [FromBody] UpdateTransactionDto updateTransDto)
-        //{
-        //    var userId = Convert.ToInt32(HttpContext.Items["UserId"] as int?);
+        [HttpDelete("{id}")]
+        [Produces(typeof(NoContentResult))]
+        public async Task<IActionResult> DeleteTrans(int id)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
 
-        //    if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId))
-        //    {
-        //        throw new ApiException("Access denied!", 400);
-        //    }
+            await _eventService.DeleteEvent((int)userId!, id);
+            return NoContent();
+        }
 
-        //    if (!await _categoryService.VerifyIsCategoryOfWallet((int)updateTransDto.CategoryId, walletId))
-        //    {
-        //        throw new ApiException("Invalid category!", 400);
-        //    }
+        [HttpGet("toggle-finished")]
+        [Produces(typeof(NoContentResult))]
+        public async Task<IActionResult> ToggleFinish(int id)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
 
-        //    await _transactionService.UpdateTransaction(id, walletId, updateTransDto);
-        //    return NoContent();
-        //}
-
-        //[HttpDelete("{id}")]
-        //[Produces(typeof(NoContentResult))]
-        //public async Task<IActionResult> DeleteTrans(int id, int walletId)
-        //{
-        //    var userId = HttpContext.Items["UserId"] as int?;
-
-        //    if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId))
-        //    {
-        //        throw new ApiException("Access denied!", 400);
-        //    }
-
-        //    await _transactionService.DeleteTransaction(id);
-        //    return NoContent();
-        //}
+            await _eventService.ToggleEventFinish((int)userId!, id);
+            return NoContent();
+        }
     }
 }

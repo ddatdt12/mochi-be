@@ -11,16 +11,18 @@ namespace MochiApi.Services
         private readonly IConfiguration _configuration;
         private readonly IBudgetService _budgetService;
         private readonly IWalletService _walletService;
+        private readonly IEventService _eventService;
         private readonly IMapper _mapper;
         public DataContext _context { get; set; }
 
-        public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper, IBudgetService budgetService, IWalletService walletService)
+        public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper, IBudgetService budgetService, IWalletService walletService, IEventService eventService)
         {
             _configuration = configuration;
             _context = context;
             _mapper = mapper;
             _budgetService = budgetService;
             _walletService = walletService;
+            _eventService = eventService;
         }
 
         public async Task<IEnumerable<Transaction>> GetTransactions(int walletId, TransactionFilterDto filter)
@@ -52,7 +54,7 @@ namespace MochiApi.Services
             {
                 transQuery = transQuery.Skip(filter.Skip.Value);
             }
-            
+
             if (filter.Take.HasValue)
             {
                 transQuery = transQuery.Take(filter.Take.Value);
@@ -79,7 +81,10 @@ namespace MochiApi.Services
                 amount *= -1;
             }
             await _walletService.UpdateWalletBalance(walletId, amount);
-
+            if (trans.EventId.HasValue)
+            {
+                await _eventService.UpdateEventSpent((int)trans.EventId);
+            }
             await _context.Transactions.AddAsync(trans);
             await _context.SaveChangesAsync();
 
@@ -130,7 +135,10 @@ namespace MochiApi.Services
                 }
                 await _walletService.UpdateWalletBalance(walletId, amount);
             }
-
+            if (trans.EventId.HasValue || updateTransDto.EventId.HasValue)
+            {
+                await _eventService.UpdateEventSpent((int)trans.EventId!);
+            }
             _mapper.Map(updateTransDto, trans);
 
             await _context.SaveChangesAsync();
@@ -144,6 +152,11 @@ namespace MochiApi.Services
                 throw new ApiException("Transaction not found!", 400);
             }
 
+
+            if (trans.EventId.HasValue)
+            {
+                await _eventService.UpdateEventSpent((int)trans.EventId!);
+            }
             await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                 trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
 

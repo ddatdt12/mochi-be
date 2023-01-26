@@ -7,6 +7,7 @@ using MochiApi.Helper;
 using MochiApi.Hubs;
 using MochiApi.Models;
 using System.Linq.Expressions;
+using static MochiApi.Common.Enum;
 
 namespace MochiApi.Services
 {
@@ -38,7 +39,7 @@ namespace MochiApi.Services
             var @events = await _context.Events.AsNoTracking().Include(e => e.Wallet).Where(e =>
           (e.WalletId == walletId && e.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == Common.Enum.MemberStatus.Accepted))
           || (e.WalletId == null && e.CreatorId == userId)
-          ).ToListAsync();
+          ).Include(e => e.Wallet).ToListAsync();
 
             return @events;
         }
@@ -65,7 +66,7 @@ namespace MochiApi.Services
             var @event = _mapper.Map<Event>(createEventDto);
 
             @event.CreatorId = userId;
-            //await _context.Budgets.AddAsync(@event);
+            await _context.Events.AddAsync(@event);
 
             await _context.SaveChangesAsync();
             return @event;
@@ -90,7 +91,7 @@ namespace MochiApi.Services
             {
                 throw new ApiException("Event not found", 400);
             }
-             _context.Events.Remove(@event);
+            _context.Events.Remove(@event);
             await _context.SaveChangesAsync();
 
             return @event;
@@ -108,8 +109,19 @@ namespace MochiApi.Services
 
             return @event;
         }
-
-
+        public async Task UpdateEventSpent(int eventId)
+        {
+            var @event = await _context.Events.Where(e => e.Id == eventId).FirstOrDefaultAsync();
+            if (@event == null)
+            {
+                throw new ApiException("Event not found", 400);
+            }
+            long amount = await _context.Transactions.AsNoTracking().Include(t => t.Category)
+            .Where(t => t.EventId == eventId)
+            .Select(t => t.Category!.Type == CategoryType.Income ? t.Amount : -1 * t.Amount).
+            SumAsync();
+            @event.SpentAmount = amount;
+        }
 
     }
 }

@@ -36,5 +36,8 @@ public class MapperProfile : Profile
 
         CreateMap<Invitation, InvitationDto>();
 
+        CreateMap<Event, EventDto>();
+        CreateMap<CreateEventDto, Event>();
+        CreateMap<UpdateEventDto, Event>();
     }
 }
