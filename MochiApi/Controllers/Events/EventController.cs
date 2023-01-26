@@ -16,13 +16,15 @@ namespace MochiApi.Controllers
     public class EventController : Controller
     {
         public IWalletService _walletService { get; set; }
+        public IEventService _eventService{ get; set; }
         public IMapper _mapper { get; set; }
         public DataContext _context { get; set; }
-        public EventController(IMapper mapper, IWalletService walletService, DataContext context)
+        public EventController(IMapper mapper, IWalletService walletService, DataContext context, IEventService eventService)
         {
             _mapper = mapper;
             _walletService = walletService;
             _context = context;
+            _eventService = eventService;
         }
 
         //[HttpGet]
@@ -30,7 +32,7 @@ namespace MochiApi.Controllers
         //{
         //    var userId = HttpContext.Items["UserId"] as int?;
 
-          
+
         //    var eventDtos = _mapper.Map<IEnumerable<EventDto>>(events);
         //    return Ok(new ApiResponse<object>(eventDtos, "Get my events successfully!"));
         //}

@@ -13,7 +13,7 @@ using MochiApi.Error;
 namespace MochiApi.Controllers
 {
     [ApiController]
-    [Route("account")]
+    [Route("api/account")]
     public class AccountController : Controller
     {
         public DataContext _context { get; set; }

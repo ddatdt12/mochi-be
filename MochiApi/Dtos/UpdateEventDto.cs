@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MochiApi.Models
 {
-    public class CreateEventDto
+    public class UpdateEventDto
     {
-        public CreateEventDto()
+        public UpdateEventDto()
         {
             Name = null!;
             Icon = null!;
@@ -16,6 +16,5 @@ namespace MochiApi.Models
         [Required]
         public string Icon { get; set; }
         public DateTime? EndDate { get; set; }
-        public int? WalletId { get; set; }
     }
 }

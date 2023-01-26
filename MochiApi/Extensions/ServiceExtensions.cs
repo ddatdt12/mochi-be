@@ -28,6 +28,7 @@ namespace MochiApi.Extensions
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IAuthService, AuthService>()
             .AddScoped<IUserService, UserService>()
+            .AddScoped<IEventService, EventService>()
             .AddScoped<IMailService, MailService>()
             .AddScoped<INotiService, NotiService>()
             .AddScoped<ICategoryService, CategoryService>()
