@@ -24,6 +24,19 @@ namespace MochiApi.Controllers
             _mapper = mapper;
         }
 
+        [HttpPut("info")]
+        [Produces(typeof(IEnumerable<InvitationDto>))]
+        public async Task<IActionResult> UpdateInfo([FromBody] UpdateUserDto updateUserDto)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
+            var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+
+            if (user == null) return NotFound();
+            user.Avatar = updateUserDto.Avatar;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
         [HttpGet("invitations")]
         [Produces(typeof(IEnumerable<InvitationDto>))]
         public async Task<IActionResult> GetInvitations()
