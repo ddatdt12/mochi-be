@@ -147,7 +147,7 @@ namespace MochiApi.Services
             await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                 trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
 
-            int amount = trans.Amount - trans.Amount;
+            int amount = trans.Amount;
             if (trans.Category!.Type == Common.Enum.CategoryType.Income)
             {
                 amount *= -1;
