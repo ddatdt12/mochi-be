@@ -11,7 +11,7 @@ using MochiApi.DTOs;
 namespace MochiApi.Controllers
 {
     [ApiController]
-    [Route("users")]
+    [Route("api/users")]
     public class UserController : Controller
     {
         public DataContext _context { get; set; }
@@ -22,13 +22,13 @@ namespace MochiApi.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetUsers([MinLength(4, ErrorMessage = "At lease 4 characters")] string email)
+        [HttpGet("search")]
+        public async Task<IActionResult> GetUsers([EmailAddress] string email)
         {
-            var users = await _context.Users.Where(u => u.Email.Contains(email)).ToListAsync();
+            var user = await _context.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
 
-            var userDtos = _mapper.Map<IEnumerable<BasicUserDto>>(users);
-            return Ok(new ApiResponse<IEnumerable<BasicUserDto>>(userDtos, "search users"));
+            var userDto = _mapper.Map<BasicUserDto>(user);
+            return Ok(new ApiResponse<BasicUserDto>(userDto, "search users by email"));
         }
     }
 }
