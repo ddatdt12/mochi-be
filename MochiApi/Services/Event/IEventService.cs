@@ -11,8 +11,9 @@ namespace MochiApi.Services
         Task<IEnumerable<Event>> GetEvents(int userId);
         Task<IEnumerable<Event>> GetEventsOfWallet(int userId, int walletId);
         Task<IEnumerable<Transaction>> GetTransactionOfEvent(int id);
-        Task<Event> ToggleEventFinish(int userId, int eventId);
+        Task ToggleEventFinish(int userId, int eventId);
         Task<Event> UpdateEvent(int userId, int eventId, UpdateEventDto updateDto);
         Task UpdateEventSpent(int eventId);
+        Task<bool> CheckEventIsInWallet(int eventId, int walletId, int creatorId);
     }
 }

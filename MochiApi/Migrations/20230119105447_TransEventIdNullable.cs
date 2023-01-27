@@ -25,7 +25,7 @@ namespace MochiApi.Migrations
                 table: "Transactions",
                 column: "EventId",
                 principalTable: "Event",
-                principalColumn: "Id");
+                principalColumn: "Id", onDelete: ReferentialAction.SetNull);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

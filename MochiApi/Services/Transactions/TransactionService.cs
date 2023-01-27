@@ -36,6 +36,11 @@ namespace MochiApi.Services
             {
                 transQuery = transQuery.Where(t => t.CategoryId == filter.CategoryId);
             }
+            
+            if (filter.EventId.HasValue)
+            {
+                transQuery = transQuery.Where(t => t.EventId == filter.EventId);
+            }
 
             if (filter.StartDate.HasValue)
             {
@@ -72,6 +77,11 @@ namespace MochiApi.Services
 
                 trans.CreatorId = userId;
                 trans.WalletId = walletId;
+
+                if (trans.EventId.HasValue && !await _eventService.CheckEventIsInWallet((int)trans.EventId, trans.WalletId, trans.CreatorId))
+                {
+                    throw new ApiException("Invalid Event", 400);
+                }
 
                 int amount = transDto.Amount;
                 var cate = await _context.Categories.Where(c => c.Id == trans.CategoryId).FirstOrDefaultAsync();
@@ -113,6 +123,12 @@ namespace MochiApi.Services
                 if (trans == null)
                 {
                     throw new ApiException("Transaction not found!", 400);
+                }
+
+
+                if (trans.EventId.HasValue && !await _eventService.CheckEventIsInWallet((int)trans.EventId, trans.WalletId, trans.CreatorId))
+                {
+                    throw new ApiException("Invalid Event", 400);
                 }
 
                 if (updateTransDto.CategoryId != trans.CategoryId)
@@ -173,6 +189,11 @@ namespace MochiApi.Services
                 if (trans == null)
                 {
                     throw new ApiException("Transaction not found!", 400);
+                }
+
+                if (trans.EventId.HasValue && !(await _eventService.CheckEventIsInWallet((int)trans.EventId, trans.WalletId, trans.CreatorId)))
+                {
+                    throw new ApiException("Invalid Event", 400);
                 }
 
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,

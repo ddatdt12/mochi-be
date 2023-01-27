@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MochiApi.Models
 {
@@ -22,5 +24,13 @@ namespace MochiApi.Models
         public Wallet? Wallet { get; set; }
         public bool IsFinished { get; set; }
         public ICollection<Transaction> Transactions { get; set; }
+
+    }
+
+    public class EventConfiguration : IEntityTypeConfiguration<Event>
+    {
+        public void Configure(EntityTypeBuilder<Event> builder)
+        {
+        }
     }
 }

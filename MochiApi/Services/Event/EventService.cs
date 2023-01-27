@@ -36,7 +36,7 @@ namespace MochiApi.Services
         }
         public async Task<IEnumerable<Event>> GetEventsOfWallet(int userId, int walletId)
         {
-            var @events = await _context.Events.AsNoTracking().Include(e => e.Wallet).Where(e =>
+            var @events = await _context.Events.AsNoTracking().Where(e =>
           (e.WalletId == walletId && !e.IsFinished && e.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted))
           || (e.WalletId == null && e.CreatorId == userId)
           ).Include(e => e.Wallet).ToListAsync();
@@ -59,7 +59,6 @@ namespace MochiApi.Services
 
             return trans;
         }
-
 
         public async Task<Event> CreateEvent(int userId, CreateEventDto createEventDto)
         {
@@ -97,7 +96,7 @@ namespace MochiApi.Services
             return @event;
         }
 
-        public async Task<Event> ToggleEventFinish(int userId, int eventId)
+        public async Task ToggleEventFinish(int userId, int eventId)
         {
             var @event = await _context.Events.Where(e => e.Id == eventId).FirstOrDefaultAsync();
             if (@event == null)
@@ -106,8 +105,6 @@ namespace MochiApi.Services
             }
             @event.IsFinished = !@event.IsFinished;
             await _context.SaveChangesAsync();
-
-            return @event;
         }
         public async Task UpdateEventSpent(int eventId)
         {
@@ -123,5 +120,14 @@ namespace MochiApi.Services
             @event.SpentAmount = amount;
         }
 
+        public async Task<bool> CheckEventIsInWallet(int eventId, int walletId, int creatorId)
+        {
+            var @event = await _context.Events.Where(e => e.Id == eventId).FirstOrDefaultAsync();
+            if (@event == null)
+            {
+                return false;
+            }
+            return @event.WalletId.HasValue ? @event.WalletId == walletId : @event.CreatorId == creatorId;
+        }
     }
 }

@@ -49,7 +49,7 @@ namespace MochiApi.Controllers
 
         [HttpPost]
         [Produces(typeof(ApiResponse<EventDto>))]
-        public async Task<IActionResult> CreateTransaction([FromBody] CreateEventDto createDto)
+        public async Task<IActionResult> CreateEvent([FromBody] CreateEventDto createDto)
         {
             var userId = HttpContext.Items["UserId"] as int?;
 
@@ -61,7 +61,7 @@ namespace MochiApi.Controllers
 
         [HttpPut("{id}")]
         [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> UpdateTransaction(int id, [FromBody] UpdateEventDto updateDto)
+        public async Task<IActionResult> UpdateEvent(int id, [FromBody] UpdateEventDto updateDto)
         {
             var userId = Convert.ToInt32(HttpContext.Items["UserId"] as int?);
 
@@ -71,7 +71,7 @@ namespace MochiApi.Controllers
 
         [HttpDelete("{id}")]
         [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> DeleteTrans(int id)
+        public async Task<IActionResult> DeleteEvent(int id)
         {
             var userId = HttpContext.Items["UserId"] as int?;
 
@@ -79,7 +79,7 @@ namespace MochiApi.Controllers
             return NoContent();
         }
 
-        [HttpGet("toggle-finished")]
+        [HttpGet("{id}/toggle-finished")]
         [Produces(typeof(NoContentResult))]
         public async Task<IActionResult> ToggleFinish(int id)
         {
