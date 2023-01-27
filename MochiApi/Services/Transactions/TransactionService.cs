@@ -32,7 +32,6 @@ namespace MochiApi.Services
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 
-
             if (filter.CategoryId.HasValue)
             {
                 transQuery = transQuery.Where(t => t.CategoryId == filter.CategoryId);
@@ -60,115 +59,147 @@ namespace MochiApi.Services
                 transQuery = transQuery.Take(filter.Take.Value);
             }
 
-
             var trans = await transQuery.ToListAsync();
             return trans;
         }
 
         public async Task<Transaction> CreateTransaction(int userId, int walletId, CreateTransactionDto transDto)
         {
-            var trans = _mapper.Map<Transaction>(transDto);
-
-            trans.CreatorId = userId;
-            trans.WalletId = walletId;
-
-            int amount = transDto.Amount;
-            var cate = await _context.Categories.Where(c => c.Id == trans.CategoryId).FirstOrDefaultAsync();
-            await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                trans.CreatedAt.Year, trans.Amount, saveChanges: false);
-            if (cate!.Type == Common.Enum.CategoryType.Expense)
+            using var transaction = _context.Database.BeginTransaction();
+            try
             {
-                amount *= -1;
-            }
-            await _walletService.UpdateWalletBalance(walletId, amount);
-            if (trans.EventId.HasValue)
-            {
-                await _eventService.UpdateEventSpent((int)trans.EventId);
-            }
-            await _context.Transactions.AddAsync(trans);
-            await _context.SaveChangesAsync();
+                var trans = _mapper.Map<Transaction>(transDto);
 
-            return trans;
-        }
+                trans.CreatorId = userId;
+                trans.WalletId = walletId;
 
-        public async Task UpdateTransaction(int transactionId, int walletId, UpdateTransactionDto updateTransDto)
-        {
-            var trans = await _context.Transactions
-            .Where(t => t.Id == transactionId && t.WalletId == walletId)
-            .Include(t => t.Category)
-            .FirstOrDefaultAsync();
-            if (trans == null)
-            {
-                throw new ApiException("Transaction not found!", 400);
-            }
-
-            if (updateTransDto.CategoryId != trans.CategoryId)
-            {
-                await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-                updateTransDto.CreateAtValue.Year, updateTransDto.Amount, saveChanges: false);
-
+                int amount = transDto.Amount;
+                var cate = await _context.Categories.Where(c => c.Id == trans.CategoryId).FirstOrDefaultAsync();
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
-
-                var updatedCate = await _context.Categories.Where(c => c.Id == updateTransDto.CategoryId).FirstOrDefaultAsync();
-                int amount = trans.Amount;
-                int updatedAmount = updateTransDto.Amount;
-                if (updatedCate!.Type == Common.Enum.CategoryType.Expense)
-                {
-                    updatedAmount *= -1;
-                }
-                if (trans.Category!.Type == Common.Enum.CategoryType.Income)
-                {
-                    amount *= -1;
-                }
-                await _walletService.UpdateWalletBalance(walletId, amount + updatedAmount);
-            }
-            else if (updateTransDto.Amount != trans.Amount)
-            {
-                await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-        updateTransDto.CreateAtValue.Year, updateTransDto.Amount - trans.Amount, saveChanges: false);
-
-                int amount = updateTransDto.Amount - trans.Amount;
-                if (trans.Category!.Type == Common.Enum.CategoryType.Expense)
+                    trans.CreatedAt.Year, trans.Amount, saveChanges: false);
+                if (cate!.Type == Common.Enum.CategoryType.Expense)
                 {
                     amount *= -1;
                 }
                 await _walletService.UpdateWalletBalance(walletId, amount);
-            }
-            if (trans.EventId.HasValue || updateTransDto.EventId.HasValue)
-            {
-                await _eventService.UpdateEventSpent((int)trans.EventId!);
-            }
-            _mapper.Map(updateTransDto, trans);
+                await _context.Transactions.AddAsync(trans);
+                await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
+                if (trans.EventId.HasValue)
+                {
+                    await _eventService.UpdateEventSpent((int)trans.EventId);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return trans;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task UpdateTransaction(int transactionId, int walletId, UpdateTransactionDto updateTransDto)
+        {
+            using var transaction = _context.Database.BeginTransaction();
+            try
+            {
+                var trans = await _context.Transactions
+                .Where(t => t.Id == transactionId && t.WalletId == walletId)
+                .Include(t => t.Category)
+                .FirstOrDefaultAsync();
+                if (trans == null)
+                {
+                    throw new ApiException("Transaction not found!", 400);
+                }
+
+                if (updateTransDto.CategoryId != trans.CategoryId)
+                {
+                    await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
+                    updateTransDto.CreateAtValue.Year, updateTransDto.Amount, saveChanges: false);
+
+                    await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+                    trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+
+                    var updatedCate = await _context.Categories.Where(c => c.Id == updateTransDto.CategoryId).FirstOrDefaultAsync();
+                    int amount = trans.Amount;
+                    int updatedAmount = updateTransDto.Amount;
+                    if (updatedCate!.Type == Common.Enum.CategoryType.Expense)
+                    {
+                        updatedAmount *= -1;
+                    }
+                    if (trans.Category!.Type == Common.Enum.CategoryType.Income)
+                    {
+                        amount *= -1;
+                    }
+                    await _walletService.UpdateWalletBalance(walletId, amount + updatedAmount);
+                }
+                else if (updateTransDto.Amount != trans.Amount)
+                {
+                    await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
+            updateTransDto.CreateAtValue.Year, updateTransDto.Amount - trans.Amount, saveChanges: false);
+
+                    int amount = updateTransDto.Amount - trans.Amount;
+                    if (trans.Category!.Type == Common.Enum.CategoryType.Expense)
+                    {
+                        amount *= -1;
+                    }
+                    await _walletService.UpdateWalletBalance(walletId, amount);
+                }
+                _mapper.Map(updateTransDto, trans);
+
+                await _context.SaveChangesAsync();
+                if (trans.EventId.HasValue || updateTransDto.EventId.HasValue)
+                {
+                    await _eventService.UpdateEventSpent((int)trans.EventId!);
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+            }
         }
 
         public async Task DeleteTransaction(int transactionId)
         {
-            var trans = await _context.Transactions.Where(t => t.Id == transactionId).Include(t => t.Category).FirstOrDefaultAsync();
-            if (trans == null)
+            using var transaction = _context.Database.BeginTransaction();
+            try
             {
-                throw new ApiException("Transaction not found!", 400);
+                var trans = await _context.Transactions.Where(t => t.Id == transactionId).Include(t => t.Category).FirstOrDefaultAsync();
+                if (trans == null)
+                {
+                    throw new ApiException("Transaction not found!", 400);
+                }
+
+                await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+                    trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+
+                int amount = trans.Amount;
+                if (trans.Category!.Type == Common.Enum.CategoryType.Income)
+                {
+                    amount *= -1;
+                }
+                await _walletService.UpdateWalletBalance(trans.WalletId, amount);
+
+                _context.Transactions.Remove(trans);
+                await _context.SaveChangesAsync();
+
+                if (trans.EventId.HasValue)
+                {
+                    await _eventService.UpdateEventSpent((int)trans.EventId!);
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
-
-
-            if (trans.EventId.HasValue)
+            catch (Exception)
             {
-                await _eventService.UpdateEventSpent((int)trans.EventId!);
+                await transaction.RollbackAsync();
+                throw;
             }
-            await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
-
-            int amount = trans.Amount;
-            if (trans.Category!.Type == Common.Enum.CategoryType.Income)
-            {
-                amount *= -1;
-            }
-            await _walletService.UpdateWalletBalance(trans.WalletId, amount);
-
-            _context.Transactions.Remove(trans);
-            await _context.SaveChangesAsync();
         }
     }
 }
