@@ -92,9 +92,17 @@ namespace MochiApi.Services
             await _context.SaveChangesAsync();
         }
 
-        Task<bool> ICategoryService.DeleteCategory(int walletId, int cateId)
+        async Task<bool> ICategoryService.DeleteCategory(int walletId, int cateId)
         {
-            throw new NotImplementedException();
+            var category = await _context.Categories.Where(p => p.Id == cateId && p.WalletId == walletId).FirstOrDefaultAsync();
+            if (category == null)
+            {
+                throw new ApiException("Category not found", 404);
+            }
+            _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
 
         public async Task<bool> VerifyIsCategoryOfWallet(int categoryId, int walletId)

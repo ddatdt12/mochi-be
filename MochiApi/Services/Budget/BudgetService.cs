@@ -253,5 +253,21 @@ namespace MochiApi.Services
 
             return amountEachDay.Select((v, i) => new BudgetDetailStatistic { Date = new DateTime(year, month, i + 1), ExpenseAmount = v }).ToList();
         }
+
+        async Task IBudgetService.UpdateSpentAmount(int categoryId, int month, int year)
+        {
+            var budget = await _context.Budgets.Where(b => b.Id == id && b.WalletId == walletId && b.Month == month && b.Year == year)
+            .FirstOrDefaultAsync();
+
+            if (budget == null)
+            {
+                throw new ApiException("Invalid budget", 400);
+            }
+
+            var spentInMonth = _context.Transactions.Where(t => t.CategoryId == budget.CategoryId
+&& t.CreatedAt.Month == month && t.CreatedAt.Year == year).Sum(t => t.Amount);
+
+            budget.SpentAmount = spentInMonth;
+        }
     }
 }
