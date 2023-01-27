@@ -41,6 +41,11 @@ namespace MochiApi.Controllers
         {
             var user = HttpContext.Items["User"] as User;
 
+            if (!await _walletService.VerifyIsUserInWallet(walletId, user!.Id))
+            {
+                throw new ApiException("Access denied!", 400);
+            }
+
             var cate = await _categoryService.CreateCategory(walletId, createCategoryDto);
 
             var cateDto = _mapper.Map<CategoryDto>(cate);

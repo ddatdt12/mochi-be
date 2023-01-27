@@ -256,7 +256,7 @@ namespace MochiApi.Services
 
         async Task IBudgetService.UpdateSpentAmount(int categoryId, int month, int year)
         {
-            var budget = await _context.Budgets.Where(b => b.Id == id && b.WalletId == walletId && b.Month == month && b.Year == year)
+            var budget = await _context.Budgets.Where(b => b.CategoryId == categoryId && b.Month == month && b.Year == year)
             .FirstOrDefaultAsync();
 
             if (budget == null)

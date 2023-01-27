@@ -26,5 +26,15 @@ namespace MochiApi.Controllers
             var catesRes = _mapper.Map<IEnumerable<CategoryDto>>(cates);
             return Ok(new ApiResponse<IEnumerable<CategoryDto>>(catesRes, "Get categories successfully!"));
         }
+
+
+        //[HttpDelete("{id}")]
+        //[Produces(typeof(NoContentResult))]
+        //public async Task<IActionResult> DeleteCategory(int id)
+        //{
+        //    var userId = HttpContext.Items["UserId"] as int?;
+        //    await _categoryService.DeleteCategory(id, walletId);
+        //    return NoContent();
+        //}
     }
 }
