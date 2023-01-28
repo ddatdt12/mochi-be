@@ -71,5 +71,12 @@ namespace MochiApi.Common
             Declined,
             Pending
         }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public enum WalletAction
+        {
+            Invite,
+            Remove
+        }
     }
 }

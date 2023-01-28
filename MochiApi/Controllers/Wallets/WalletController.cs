@@ -10,6 +10,8 @@ using MochiApi.Hubs;
 using MochiApi.Models;
 using MochiApi.Services;
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
+using static MochiApi.Common.Enum;
 
 namespace MochiApi.Controllers
 {
@@ -77,25 +79,22 @@ namespace MochiApi.Controllers
             return Ok(new ApiResponse<object>(members, "Get Members of wallet"));
         }
 
-        [HttpPost("{id}/members/add")]
+        [HttpPost("{id}/members")]
         [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> GetMembersOfWallet(int id, [FromBody] int memberId)
+        public async Task<IActionResult> AddOrRemoveMember(int id, [FromBody] int memberId, [FromQuery, Required] WalletAction action)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-
-            await _walletService.AddMemberToWallet(userId, id, memberId);
-            return NoContent();
-        }
-
-        [HttpPost("{id}/members/remove")]
-        [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> AddMember(int id, [FromBody] int memberId)
-        {
-            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-
-            await _walletService.RemoveMemberFromWallet(userId, id, memberId);
+            if (action == WalletAction.Invite)
+            {
+                await _walletService.AddMemberToWallet(userId, id, memberId);
+            }
+            else
+            {
+                await _walletService.RemoveMemberFromWallet(userId, id, memberId);
+            }
             return NoContent();
         }
 
     }
+
 }
