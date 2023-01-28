@@ -9,6 +9,7 @@ namespace MochiApi.Models
         public Transaction()
         {
             Note = String.Empty;
+            Participants = String.Empty;
         }
         public int Id { get; set; }
         public int Amount { get; set; }
@@ -24,6 +25,7 @@ namespace MochiApi.Models
         [Required]
         public DateTime CreatedAt { get; set; }
         public string? Image{ get; set; }
+        public string Participants{ get; set; }
     }
     public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
     {

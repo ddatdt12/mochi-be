@@ -111,22 +111,63 @@ namespace MochiApi.Services
                 {
                     throw new ApiException("Wallet not found!", 400);
                 }
-                if (updateWallet.Type.HasValue && updateWallet.Type == WalletType.Group && updateWallet.Type != wallet.Type)
+                var adminMember = wallet.WalletMembers.FirstOrDefault(wM => wM.UserId == userId);
+                if (adminMember == null || adminMember.Role != MemberRole.Admin)
                 {
-                    if (updateWallet.MemberIds.Count == 0)
-                    {
-                        throw new ApiException("Ví nhóm có ít nhất 1 người", 400);
-                    }
-                    var memberIds = updateWallet.MemberIds.Where(mId => mId != userId).ToList();
-                    await _context.WalletMembers.AddRangeAsync(memberIds.Select(mId =>
-                    new WalletMember
-                    {
-                        WalletId = wallet.Id,
-                        Role = MemberRole.Member,
-                        UserId = mId,
-                    }).ToList());
-                    notis = await CreateInvitations(userId, wallet, memberIds);
+                    throw new ApiException("You are not authorized!", 401);
                 }
+
+                if (updateWallet.Type.HasValue)
+                {
+
+                    if (updateWallet.Type == WalletType.Group)
+                    {
+                        if (updateWallet.MemberIds.Count == 0)
+                        {
+                            throw new ApiException("Ví nhóm có ít nhất 1 người", 400);
+                        }
+                        var memberIds = updateWallet.MemberIds.Where(mId => mId != userId).ToList();
+                        var alreadyMemberIds = await _context.WalletMembers.Where(m => m.WalletId == walletId && m.UserId != userId)
+                        .Select(m => m.UserId).ToListAsync();
+
+                        if (updateWallet.Type != wallet.Type)
+                        {
+                            await _context.WalletMembers.AddRangeAsync(memberIds.Select(mId =>
+                            new WalletMember
+                            {
+                                WalletId = wallet.Id,
+                                Role = MemberRole.Member,
+                                UserId = mId,
+                            }).ToList());
+                            notis = await CreateInvitations(userId, wallet, memberIds);
+                        }
+                        else
+                        {
+                            var removedUsedIds = alreadyMemberIds.Except(memberIds).ToList();
+                            var newUserIdUsedIds = memberIds.Except(alreadyMemberIds).ToList();
+
+                            await _context.WalletMembers.AddRangeAsync(newUserIdUsedIds.Select(mId =>
+                            new WalletMember
+                            {
+                                WalletId = wallet.Id,
+                                Role = MemberRole.Member,
+                                UserId = mId,
+                            }).ToList());
+
+                            await _context.WalletMembers.Where(wM => wM.WalletId == wallet.Id && removedUsedIds.Contains(wM.UserId)).DeleteFromQueryAsync();
+                            notis = await CreateInvitations(userId, wallet, newUserIdUsedIds);
+                        }
+                    }
+                    else
+                    {
+                        if (wallet.Type == WalletType.Group)
+                        {
+                            await _context.WalletMembers.Where(wM => wM.WalletId == wallet.Id && wM.Role == MemberRole.Member).DeleteFromQueryAsync();
+                        }
+                    }
+
+                }
+
                 _mapper.Map(updateWallet, wallet);
 
                 await _context.SaveChangesAsync();

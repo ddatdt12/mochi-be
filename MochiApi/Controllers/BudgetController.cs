@@ -64,7 +64,7 @@ namespace MochiApi.Controllers
         [HttpGet("{id}/transactions")]
         public async Task<IActionResult> GetTransactionsInBudget(int id, int walletId, [FromQuery, Required] int month, [FromQuery, Required] int year)
         {
-            var userId = HttpContext.Items["UserId"] as int?;
+            int userId = HttpContext.Items["UserId"]! as int? ?? 0;
             if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
             {
                 throw new ApiException("Access denied!", 400);
@@ -74,7 +74,7 @@ namespace MochiApi.Controllers
             {
                 throw new ApiException("Not found", 404);
             }
-            var transList = await _transService.GetTransactions(walletId,
+            var transList = await _transService.GetTransactions(userId, walletId,
                 filter: new TransactionFilterDto
                 {
                     StartDate = new DateTime(year, month, 1),

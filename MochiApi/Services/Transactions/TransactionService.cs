@@ -25,10 +25,20 @@ namespace MochiApi.Services
             _eventService = eventService;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactions(int walletId, TransactionFilterDto filter)
+        public async Task<IEnumerable<Transaction>> GetTransactions(int userId ,int? walletId, TransactionFilterDto filter)
         {
-            var transQuery = _context.Transactions.Where(t => t.WalletId == walletId)
-            .Include(t => t.Category)
+            var transQuery = _context.Transactions.AsQueryable();
+
+            if (walletId.HasValue)
+            {
+                transQuery = transQuery.Where(t => t.WalletId == walletId);
+            }
+            else
+            {
+                transQuery = transQuery.Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == Common.Enum.MemberStatus.Accepted));
+            }
+
+            transQuery = transQuery.Include(t => t.Category)
             .Include(t => t.Event)
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
@@ -37,7 +47,7 @@ namespace MochiApi.Services
             {
                 transQuery = transQuery.Where(t => t.CategoryId == filter.CategoryId);
             }
-            
+
             if (filter.EventId.HasValue)
             {
                 transQuery = transQuery.Where(t => t.EventId == filter.EventId);

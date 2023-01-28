@@ -29,12 +29,12 @@ namespace MochiApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTransactions(int walletId, [FromQuery] TransactionFilterDto filter)
         {
-            var userId = HttpContext.Items["UserId"] as int?;
+            int userId = HttpContext.Items["UserId"] as int? ?? 0;
             if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
             {
                 throw new ApiException("Access denied!", 400);
             }
-            var transList = await _transactionService.GetTransactions(walletId, filter);
+            var transList = await _transactionService.GetTransactions(userId, walletId, filter);
             var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
             var groupByDates = transRes.GroupBy(tr => tr.CreatedAt.Date);
             List<TransactionGroupDateDto> response = new List<TransactionGroupDateDto>();
@@ -75,7 +75,7 @@ namespace MochiApi.Controllers
         [Produces(typeof(IEnumerable<TransactionDto>))]
         public async Task<IActionResult> GetRecentlyTransactions(int walletId, [FromQuery] TransactionFilterDto filter)
         {
-            var userId = HttpContext.Items["UserId"] as int?;
+            int userId = HttpContext.Items["UserId"] as int? ?? 0;
             if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
             {
                 throw new ApiException("Access denied!", 400);
@@ -83,7 +83,7 @@ namespace MochiApi.Controllers
 
             filter.Skip = 0;
             filter.Take = 5;
-            var transList = await _transactionService.GetTransactions(walletId, filter);
+            var transList = await _transactionService.GetTransactions(userId, walletId, filter);
             var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
             return Ok(new ApiResponse<object>(transRes, "Get recently transactions successfully!"));
         }
