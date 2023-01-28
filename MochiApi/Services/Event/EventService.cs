@@ -37,7 +37,7 @@ namespace MochiApi.Services
         public async Task<IEnumerable<Event>> GetEventsOfWallet(int userId, int walletId)
         {
             var @events = await _context.Events.AsNoTracking().Where(e =>
-          (e.WalletId == walletId && !e.IsFinished && e.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted))
+          (e.WalletId == walletId && e.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted))
           || (e.WalletId == null && e.CreatorId == userId)
           ).Include(e => e.Wallet).ToListAsync();
 

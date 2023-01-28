@@ -15,8 +15,9 @@
         public WalletDto? Wallet { get; set; }
         public int CategoryId { get; set; }
         public CategoryDto? Category { get; set; }
-        public DateTime CreatedAt{ get; set; }
+        public DateTime CreatedAt { get; set; }
         public int? EventId { get; set; }
+        public EventDto? Event { get; set; }
         public string? Image { get; set; }
     }
 }

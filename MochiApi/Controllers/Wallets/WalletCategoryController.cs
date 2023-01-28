@@ -66,7 +66,7 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> DeleteCategory(int id, int walletId)
         {
             var userId = HttpContext.Items["UserId"] as int?;
-            await _categoryService.DeleteCategory(id, walletId);
+            await _categoryService.DeleteCategory(walletId, id);
             return NoContent();
         }
     }

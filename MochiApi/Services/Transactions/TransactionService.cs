@@ -29,6 +29,7 @@ namespace MochiApi.Services
         {
             var transQuery = _context.Transactions.Where(t => t.WalletId == walletId)
             .Include(t => t.Category)
+            .Include(t => t.Event)
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 
