@@ -26,7 +26,10 @@ namespace MochiApi.Services
 
         public async Task<IEnumerable<Wallet>> GetWallets(int userId)
         {
-            return await _context.Wallets.AsNoTracking().Include(w => w.Members).Where(w => w.Members.Where(m => m.Id == userId).Count() > 0).ToListAsync();
+            return await _context.Wallets.AsNoTracking()
+            .Include(w => w.WalletMembers)
+            .ThenInclude(wM => wM.User)
+            .Where(w => w.Members.Where(m => m.Id == userId).Count() > 0).ToListAsync();
         }
 
         public async Task<Wallet> CreateWallet(int userId, CreateWalletDto walletDto)
@@ -104,14 +107,14 @@ namespace MochiApi.Services
             using var transaction = _context.Database.BeginTransaction();
             try
             {
-                var wallet = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
+                var wallet = await _context.Wallets.Include(w => w.WalletMembers).Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
                 IEnumerable<Notification>? notis = null;
 
                 if (wallet == null)
                 {
                     throw new ApiException("Wallet not found!", 400);
                 }
-                var adminMember = wallet.WalletMembers.FirstOrDefault(wM => wM.UserId == userId);
+                var adminMember = wallet.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == userId).FirstOrDefault();
                 if (adminMember == null || adminMember.Role != MemberRole.Admin)
                 {
                     throw new ApiException("You are not authorized!", 401);
@@ -154,7 +157,10 @@ namespace MochiApi.Services
                                 UserId = mId,
                             }).ToList());
 
-                            await _context.WalletMembers.Where(wM => wM.WalletId == wallet.Id && removedUsedIds.Contains(wM.UserId)).DeleteFromQueryAsync();
+                            if (removedUsedIds.Count > 0)
+                            {
+                                await _context.WalletMembers.Where(wM => wM.WalletId == wallet.Id && removedUsedIds.Contains(wM.UserId)).DeleteFromQueryAsync();
+                            }
                             notis = await CreateInvitations(userId, wallet, newUserIdUsedIds);
                         }
                     }
@@ -331,7 +337,9 @@ namespace MochiApi.Services
         }
         public async Task<IEnumerable<WalletMember>> GetUsersInWallet(int walletId, int userId)
         {
-            var walletMembers = await _context.WalletMembers.Where(wM => wM.WalletId == walletId).Include(wM => wM.User).ToListAsync();
+            var walletMembers = await _context.WalletMembers
+            .Where(wM => wM.WalletId == walletId)
+            .Include(wM => wM.User).ToListAsync();
 
             return walletMembers;
         }

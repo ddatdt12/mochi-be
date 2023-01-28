@@ -24,6 +24,7 @@ public class MapperProfile : Profile
         CreateMap<WalletMember, WalletMemberDto>();
 
         CreateMap<Transaction, TransactionDto>();
+        //.ForMember(t => t.Pa);
         CreateMap<CreateTransactionDto, Transaction>();
         CreateMap<UpdateTransactionDto, Transaction>();
 

@@ -17,6 +17,8 @@ namespace MochiApi.Dtos
         public bool IsDefault { get; set; }
         public WalletType Type { get; set; }
         public ICollection<UserDto> Members { get; set; }
+        public ICollection<WalletMemberDto> WalletMembers
+        { get; set; }
 
     }
 }

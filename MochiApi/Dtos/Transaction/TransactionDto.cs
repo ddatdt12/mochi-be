@@ -5,6 +5,7 @@
         public TransactionDto()
         {
             Note = String.Empty;
+            ///*Participants*/ = new List<int>();
         }
         public int Id { get; set; }
         public int Amount { get; set; }
