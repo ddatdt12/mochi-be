@@ -77,27 +77,7 @@ namespace MochiApi.Services
                 //Invitations
                 if (wallet.Type == WalletType.Group)
                 {
-                    var now = DateTime.UtcNow;
-                    var invitations = walletDto.MemberIds.Select(m => new Invitation
-                    {
-                        SenderId = userId,
-                        CreatedAt = now,
-                        UserId = m,
-                        Status = InvitationStatus.New,
-                        ExpirationDate = now.AddDays(7),
-                        WalletId = wallet.Id
-                    }).ToList();
-
-                    await _context.Invitations.BulkInsertAsync(invitations);
-                    await _context.BulkSaveChangesAsync();
-                    notis = invitations.Select(i => new Notification
-                    {
-                        InvitationId = i.Id,
-                        UserId = i.UserId,
-                        Type = NotificationType.JoinWalletInvitation,
-                        Description = Helper.NotiTemplate.GetInvitationContent(wallet.Name)
-                    });
-                    await _context.Notifcations.AddRangeAsync(notis);
+                    notis = await CreateInvitations(userId, wallet, walletDto.MemberIds.ToList());
                 }
 
                 await _context.SaveChangesAsync();
@@ -121,14 +101,51 @@ namespace MochiApi.Services
 
         public async Task UpdateWallet(int walletId, int userId, UpdateWalletDto updateWallet)
         {
-            var wallet = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
-            if (wallet == null)
+            using var transaction = _context.Database.BeginTransaction();
+            try
             {
-                throw new ApiException("Wallet not found!", 400);
-            }
-            _mapper.Map(updateWallet, wallet);
+                var wallet = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
+                IEnumerable<Notification>? notis = null;
 
-            await _context.SaveChangesAsync();
+                if (wallet == null)
+                {
+                    throw new ApiException("Wallet not found!", 400);
+                }
+                if (updateWallet.Type.HasValue && updateWallet.Type == WalletType.Group && updateWallet.Type != wallet.Type)
+                {
+                    if (updateWallet.MemberIds.Count == 0)
+                    {
+                        throw new ApiException("Ví nhóm có ít nhất 1 người", 400);
+                    }
+                    var memberIds = updateWallet.MemberIds.Where(mId => mId != userId).ToList();
+                    await _context.WalletMembers.AddRangeAsync(memberIds.Select(mId =>
+                    new WalletMember
+                    {
+                        WalletId = wallet.Id,
+                        Role = MemberRole.Member,
+                        UserId = mId,
+                    }).ToList());
+                    notis = await CreateInvitations(userId, wallet, memberIds);
+                }
+                _mapper.Map(updateWallet, wallet);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                if (notis != null)
+                {
+                    var notisDtos = _mapper.Map<IEnumerable<NotificationDto>>(notis);
+                    foreach (var item in notisDtos)
+                    {
+                        _ = _notiHub.Clients.Users(item.UserId.ToString()).SendAsync("Notification", item);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
         public async Task DeleteWallet(int walletId, int userId)
@@ -140,9 +157,130 @@ namespace MochiApi.Services
                 throw new ApiException("Wallet not found!", 400);
             }
 
+            _context.Remove(wallet);
+            await _context.SaveChangesAsync();
+        }
+        public async Task AddMemberToWallet(int userId, int walletId, int memberId)
+        {
+            if (userId == memberId)
+            {
+                throw new ApiException("You can not remove yourself", 400);
+            }
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var wallet = await _context.Wallets.Where(w => w.Id == walletId).Include(w => w.WalletMembers).FirstOrDefaultAsync();
+
+                if (wallet == null)
+                {
+                    throw new ApiException("Wallet not found!", 400);
+                }
+
+                if (wallet.Type != WalletType.Group)
+                {
+                    throw new ApiException("Wallet is not group!", 400);
+                }
+
+                var adminMember = wallet.WalletMembers.FirstOrDefault(wM => wM.UserId == userId);
+                if (adminMember == null || adminMember.Role != MemberRole.Admin)
+                {
+                    throw new ApiException("You are not authorized!", 401);
+                }
+
+                var IsMember = await _context.WalletMembers.Where(w => w.WalletId == walletId && w.UserId == memberId && w.Status == MemberStatus.Accepted).AnyAsync();
+
+                if (IsMember)
+                {
+                    throw new ApiException("User already member!", 400);
+                }
+                var walletMember = new WalletMember { WalletId = wallet.Id, UserId = memberId, };
+                await _context.WalletMembers.AddAsync(walletMember);
+
+                var notis = await CreateInvitations(userId, wallet, memberIds: new List<int>() { memberId });
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                if (notis != null)
+                {
+                    SendNotifications(notis);
+                }
+
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        public async Task RemoveMemberFromWallet(int userId, int walletId, int memberId)
+        {
+            if (userId == memberId)
+            {
+                throw new ApiException("You can not remove yourself", 400);
+            }
+            var wallet = await _context.Wallets.Where(w => w.Id == walletId).Include(w => w.WalletMembers).FirstOrDefaultAsync();
+
+            if (wallet == null)
+            {
+                throw new ApiException("Wallet not found!", 400);
+            }
+            if (wallet.Type != WalletType.Group)
+            {
+                throw new ApiException("Wallet is not group!", 400);
+            }
+            var adminMember = wallet.WalletMembers.FirstOrDefault(wM => wM.UserId == userId);
+            if (adminMember == null || adminMember.Role != MemberRole.Admin)
+            {
+                throw new ApiException("You are not authorized!", 401);
+            }
+
+            var member = await _context.WalletMembers.Where(w => w.WalletId == walletId && w.UserId == memberId).FirstOrDefaultAsync();
+
+            if (member == null)
+            {
+                throw new ApiException("User is not a member of wallet!", 400);
+            }
+
+            _context.WalletMembers.Remove(member);
             await _context.SaveChangesAsync();
         }
 
+        private async Task<List<Notification>> CreateInvitations(int adminId, Wallet wallet, List<int> memberIds)
+        {
+            var now = DateTime.UtcNow;
+            var invitations = memberIds.Select(m => new Invitation
+            {
+                SenderId = adminId,
+                CreatedAt = now,
+                UserId = m,
+                Status = InvitationStatus.New,
+                ExpirationDate = now.AddDays(7),
+                WalletId = wallet.Id
+            }).ToList();
+
+            await _context.Invitations.AddRangeAsync(invitations);
+            await _context.SaveChangesAsync();
+            var notis = invitations.Select(i => new Notification
+            {
+                InvitationId = i.Id,
+                UserId = i.UserId,
+                Type = NotificationType.JoinWalletInvitation,
+                Description = Helper.NotiTemplate.GetInvitationContent(wallet.Name)
+            }).ToList();
+            await _context.Notifcations.AddRangeAsync(notis);
+
+            return notis;
+        }
+        private void SendNotifications(List<Notification> notis)
+        {
+            var notisDtos = _mapper.Map<IEnumerable<NotificationDto>>(notis);
+            foreach (var item in notisDtos)
+            {
+                _ = _notiHub.Clients.Users(item.UserId.ToString()).SendAsync("Notification", item);
+            }
+        }
         public async Task<bool> VerifyIsUserInWallet(int walletId, int userId)
         {
             var exist = await _context.Wallets.Where(w => w.Id == walletId &&

@@ -77,13 +77,23 @@ namespace MochiApi.Controllers
             return Ok(new ApiResponse<object>(members, "Get Members of wallet"));
         }
 
-        [HttpDelete("{id}/members/{memberId}")]
+        [HttpPost("{id}/members/add")]
         [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> GetMembersOfWallet(int id, int memberId)
+        public async Task<IActionResult> GetMembersOfWallet(int id, [FromBody] int memberId)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
 
-            await _walletService.DeleteMemberInWallet(userId, id, memberId);
+            await _walletService.AddMemberToWallet(userId, id, memberId);
+            return NoContent();
+        }
+
+        [HttpPost("{id}/members/remove")]
+        [Produces(typeof(NoContentResult))]
+        public async Task<IActionResult> AddMember(int id, [FromBody] int memberId)
+        {
+            var userId = (int)(HttpContext.Items["UserId"] as int?)!;
+
+            await _walletService.RemoveMemberFromWallet(userId, id, memberId);
             return NoContent();
         }
 
