@@ -84,6 +84,7 @@ namespace MochiApi.Services
             var transQuery = _context.Transactions.Where(t => t.Id == id)
             .Include(t => t.Category)
             .Include(t => t.Event)
+            .Include(t => t.Creator)
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 
@@ -139,13 +140,13 @@ namespace MochiApi.Services
                 {
                     var memberIds = await _context.WalletMembers.Where(wM => wM.WalletId == walletId)
                     .Select(wM => wM.UserId).ToListAsync();
-                    var invalidUsers = transDto.ParticipantIds.Except(memberIds).Select(id => id).ToList();
-                    if (invalidUsers.Count < 0)
+                    var invalidUsers = transDto.ParticipantIds
+                .Except(memberIds).Select(id => id).ToList();
+                    if (invalidUsers.Count > 0)
                     {
-                        throw new ApiException("Users " + string.Join(',', invalidUsers + " not exist!"), 400);
+                        throw new ApiException("Users " + string.Join(',', invalidUsers) + " not exist!", 400);
                     }
-
-                    trans.ParticipantIds = String.Join(';', transDto.ParticipantIds);
+                    trans.ParticipantIds = String.Join(';', transDto.ParticipantIds.Where(id => id != trans.CreatorId));
                 }
 
                 await _context.SaveChangesAsync();
@@ -220,11 +221,11 @@ namespace MochiApi.Services
                 .Select(wM => wM.UserId).ToListAsync();
                 var invalidUsers = updateTransDto.ParticipantIds
                 .Except(memberIds).Select(id => id).ToList();
-                if (invalidUsers.Count < 0)
+                if (invalidUsers.Count > 0)
                 {
-                    throw new ApiException("Users " + string.Join(',', invalidUsers + " not exist!"), 400);
+                    throw new ApiException("Users " + string.Join(',', invalidUsers) + " not exist!", 400);
                 }
-                trans.ParticipantIds = String.Join(';', updateTransDto.ParticipantIds);
+                trans.ParticipantIds = String.Join(';', updateTransDto.ParticipantIds.Where(id => id != trans.CreatorId));
 
                 await _context.SaveChangesAsync();
                 if (trans.EventId.HasValue || updateTransDto.EventId.HasValue)
@@ -237,6 +238,7 @@ namespace MochiApi.Services
             catch (Exception)
             {
                 await transaction.RollbackAsync();
+                throw;
             }
         }
 
