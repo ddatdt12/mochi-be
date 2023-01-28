@@ -9,7 +9,7 @@ namespace MochiApi.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "Participants",
+                name: "ParticipantIds",
                 table: "Transactions",
                 type: "longtext",
                 nullable: false);
@@ -18,7 +18,7 @@ namespace MochiApi.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Participants",
+                name: "ParticipantIds",
                 table: "Transactions");
         }
     }

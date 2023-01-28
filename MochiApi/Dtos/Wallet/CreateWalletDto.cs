@@ -15,6 +15,7 @@ namespace MochiApi.Dtos
         public int Balance { get; set; }
         public int? ClonedCategoryWalletId { get; set; }
         public WalletType Type { get; set; }
+
         public ICollection<int> MemberIds { get; set; }
 
     }

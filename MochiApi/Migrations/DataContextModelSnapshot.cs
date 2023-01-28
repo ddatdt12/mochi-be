@@ -980,7 +980,7 @@ namespace MochiApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Participants")
+                    b.Property<string>("ParticipantIds")
                         .IsRequired()
                         .HasColumnType("longtext");
 

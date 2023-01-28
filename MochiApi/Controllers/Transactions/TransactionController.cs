@@ -88,6 +88,21 @@ namespace MochiApi.Controllers
             return Ok(new ApiResponse<object>(transRes, "Get recently transactions successfully!"));
         }
 
+        [HttpGet("{id}")]
+        [Produces(typeof(TransactionDto))]
+        public async Task<IActionResult> GetTransactionById(int id, int walletId)
+        {
+            int userId = HttpContext.Items["UserId"] as int? ?? 0;
+            if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
+            {
+                throw new ApiException("Access denied!", 400);
+            }
+
+            var trans = await _transactionService.GetTransactionById(id);
+            var transRes = _mapper.Map<TransactionDto>(trans);
+            return Ok(new ApiResponse<object>(transRes, "Get recently transactions successfully!"));
+        }
+
         [HttpPost]
         [Produces(typeof(ApiResponse<TransactionDto>))]
         public async Task<IActionResult> CreateTransaction(int walletId, [FromBody] CreateTransactionDto createTransactionDto)

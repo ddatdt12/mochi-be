@@ -25,7 +25,7 @@ namespace MochiApi.Services
             _eventService = eventService;
         }
 
-        public async Task<IEnumerable<Transaction>> GetTransactions(int userId ,int? walletId, TransactionFilterDto filter)
+        public async Task<IEnumerable<Transaction>> GetTransactions(int userId, int? walletId, TransactionFilterDto filter)
         {
             var transQuery = _context.Transactions.AsQueryable();
 
@@ -79,6 +79,30 @@ namespace MochiApi.Services
             return trans;
         }
 
+        public async Task<Transaction?> GetTransactionById(int id)
+        {
+            var transQuery = _context.Transactions.Where(t => t.Id == id)
+            .Include(t => t.Category)
+            .Include(t => t.Event)
+            .OrderByDescending(t => t.CreatedAt)
+            .AsNoTracking();
+
+            var trans = await transQuery.FirstOrDefaultAsync();
+            if (trans == null)
+            {
+                return trans;
+            }
+            var participants = trans.ParticipantIds.Split(";", StringSplitOptions.RemoveEmptyEntries).Select(id => Convert.ToInt32(id))
+            .ToList();
+
+            if (participants.Count > 0)
+            {
+                trans.Participants = await _context.Users.AsNoTracking().Where(u => participants.Contains(u.Id)).ToListAsync();
+            }
+
+            return trans;
+        }
+
         public async Task<Transaction> CreateTransaction(int userId, int walletId, CreateTransactionDto transDto)
         {
             using var transaction = _context.Database.BeginTransaction();
@@ -109,6 +133,19 @@ namespace MochiApi.Services
                 if (trans.EventId.HasValue)
                 {
                     await _eventService.UpdateEventSpent((int)trans.EventId);
+                }
+
+                if (transDto.ParticipantIds.Count > 0)
+                {
+                    var memberIds = await _context.WalletMembers.Where(wM => wM.WalletId == walletId)
+                    .Select(wM => wM.UserId).ToListAsync();
+                    var invalidUsers = transDto.ParticipantIds.Except(memberIds).Select(id => id).ToList();
+                    if (invalidUsers.Count < 0)
+                    {
+                        throw new ApiException("Users " + string.Join(',', invalidUsers + " not exist!"), 400);
+                    }
+
+                    trans.ParticipantIds = String.Join(';', transDto.ParticipantIds);
                 }
 
                 await _context.SaveChangesAsync();
@@ -176,6 +213,18 @@ namespace MochiApi.Services
                     await _walletService.UpdateWalletBalance(walletId, amount);
                 }
                 _mapper.Map(updateTransDto, trans);
+
+
+                var memberIds = await _context.WalletMembers
+                .Where(wM => wM.WalletId == walletId)
+                .Select(wM => wM.UserId).ToListAsync();
+                var invalidUsers = updateTransDto.ParticipantIds
+                .Except(memberIds).Select(id => id).ToList();
+                if (invalidUsers.Count < 0)
+                {
+                    throw new ApiException("Users " + string.Join(',', invalidUsers + " not exist!"), 400);
+                }
+                trans.ParticipantIds = String.Join(';', updateTransDto.ParticipantIds);
 
                 await _context.SaveChangesAsync();
                 if (trans.EventId.HasValue || updateTransDto.EventId.HasValue)

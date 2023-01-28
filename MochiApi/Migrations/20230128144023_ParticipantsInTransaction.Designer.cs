@@ -11,7 +11,7 @@ using MochiApi.Models;
 namespace MochiApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230128080031_ParticipantsInTransaction")]
+    [Migration("20230128144023_ParticipantsInTransaction")]
     partial class ParticipantsInTransaction
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -982,7 +982,7 @@ namespace MochiApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("Participants")
+                    b.Property<string>("ParticipantIds")
                         .IsRequired()
                         .HasColumnType("longtext");
 

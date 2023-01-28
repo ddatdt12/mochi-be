@@ -16,7 +16,7 @@ using static MochiApi.Common.Enum;
 namespace MochiApi.Controllers
 {
     [ApiController]
-    [Route("api/wallets/statistic")]
+    [Route("api/wallets/{id}/statistic")]
     [Protect]
     public class StatisticWalletController : Controller
     {
@@ -30,7 +30,7 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet("group")]
-        public async Task<IActionResult> GetReportGroupByDate([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        public async Task<IActionResult> GetReportGroupByDate(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
             startDate = startDate.Date;
@@ -48,8 +48,7 @@ namespace MochiApi.Controllers
             }
             List<DailyReport> listDailyReport = new List<DailyReport>();
             endDate = endDate.AddDays(1).AddSeconds(-1);
-            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted)
-            && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
+            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
 
             var dailyReportMap = (await transQuery.GroupBy(t => t.CreatedAt.Date).Select(gr =>
             new DailyReport
@@ -65,7 +64,7 @@ namespace MochiApi.Controllers
                 var report = dailyReportMap.ContainsKey(date) ? dailyReportMap[date] : new DailyReport { Date = date, Income = 0, Expense = 0 };
                 listDailyReport.Add(report);
             }
-       
+
             long netIncome = dailyReportMap.Values.Sum(t => t.Income - t.Expense);
 
             return Ok(new ApiResponse<object>(new
@@ -75,7 +74,7 @@ namespace MochiApi.Controllers
             }, "Get report of wallet successfully!"));
         }
         [HttpGet("expense")]
-        public async Task<IActionResult> GetSpendingReport([FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopSpending = true)
+        public async Task<IActionResult> GetSpendingReport(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopSpending = true)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
             startDate = startDate.Date;
@@ -93,9 +92,8 @@ namespace MochiApi.Controllers
             }
 
             endDate = endDate.AddDays(1).AddSeconds(-1);
-            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted) 
-            && t.Category!.Type == CategoryType.Expense && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
-          
+            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.Category!.Type == CategoryType.Expense && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
+
             var listTopSpending = new List<CategoryStat>();
             if (showTopSpending)
             {
@@ -130,7 +128,7 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet("income")]
-        public async Task<IActionResult> GetIncomeReport([FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopIncome = true)
+        public async Task<IActionResult> GetIncomeReport(int id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, bool showTopIncome = true)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
             startDate = startDate.Date;
@@ -149,8 +147,7 @@ namespace MochiApi.Controllers
 
 
             endDate = endDate.AddDays(1).AddSeconds(-1);
-            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted)
-            && t.Category!.Type == CategoryType.Income && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
+            var transQuery = _context.Transactions.AsNoTracking().Where(t => t.WalletId == id && t.Category!.Type == CategoryType.Income && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
 
             var incomes = new List<CategoryStat>();
             if (showTopIncome)

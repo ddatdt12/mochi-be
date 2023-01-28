@@ -9,5 +9,6 @@ namespace MochiApi.Services
         Task DeleteTransaction(int transactionId);
         Task UpdateTransaction(int transactionId, int walletId, UpdateTransactionDto updateTransDto);
         Task<IEnumerable<Transaction>> GetTransactions(int userId, int? walletId, TransactionFilterDto filter);
+        Task<Transaction?> GetTransactionById(int id);
     }
 }

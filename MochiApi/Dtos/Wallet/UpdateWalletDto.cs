@@ -14,6 +14,6 @@ namespace MochiApi.Dtos
         public string? Icon { get; set; }
         public int? Balance { get; set; }
         public WalletType? Type { get; set; }
-        public ICollection<int> MemberIds { get; set; }
+        public ICollection<int>? MemberIds { get; set; }
     }
 }

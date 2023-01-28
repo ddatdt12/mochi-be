@@ -5,7 +5,7 @@
         public TransactionDto()
         {
             Note = String.Empty;
-            ///*Participants*/ = new List<int>();
+            Participants = new List<UserDto>();
         }
         public int Id { get; set; }
         public int Amount { get; set; }
@@ -20,5 +20,6 @@
         public int? EventId { get; set; }
         public EventDto? Event { get; set; }
         public string? Image { get; set; }
+        public List<UserDto> Participants { get; set; }
     }
 }

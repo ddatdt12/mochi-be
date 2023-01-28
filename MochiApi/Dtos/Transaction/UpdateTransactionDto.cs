@@ -7,6 +7,7 @@ namespace MochiApi.Dtos
         public UpdateTransactionDto()
         {
             Note = String.Empty;
+            ParticipantIds = new List<int>();
         }
         public int Amount { get; set; }
         [Required]
@@ -16,6 +17,7 @@ namespace MochiApi.Dtos
         public string? Image { get; set; }
         [Required]
         public DateTime? CreatedAt { get; set; }
+        public List<int> ParticipantIds { get; set; }
 
         public DateTime CreateAtValue
         {

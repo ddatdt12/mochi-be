@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MochiApi.Models
 {
@@ -9,7 +10,8 @@ namespace MochiApi.Models
         public Transaction()
         {
             Note = String.Empty;
-            Participants = String.Empty;
+            ParticipantIds = String.Empty;
+            Participants = new List<User>();
         }
         public int Id { get; set; }
         public int Amount { get; set; }
@@ -24,8 +26,10 @@ namespace MochiApi.Models
         public Event? Event { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; }
-        public string? Image{ get; set; }
-        public string Participants{ get; set; }
+        public string? Image { get; set; }
+        public string ParticipantIds { get; set; }
+        [NotMapped]
+        public List<User> Participants { get; set; }
     }
     public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
     {
