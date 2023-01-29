@@ -85,6 +85,7 @@ namespace MochiApi.Services
             .Include(t => t.Category)
             .Include(t => t.Event)
             .Include(t => t.Creator)
+            .Include(t => t.Wallet)
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 

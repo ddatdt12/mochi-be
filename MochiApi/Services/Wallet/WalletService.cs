@@ -203,6 +203,10 @@ namespace MochiApi.Services
             {
                 throw new ApiException("Wallet not found!", 400);
             }
+            if (wallet.IsDefault)
+            {
+                throw new ApiException("Default wallet can not be deleted!", 400);
+            }
 
             _context.Remove(wallet);
             await _context.SaveChangesAsync();
