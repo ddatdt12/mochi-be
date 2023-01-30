@@ -29,7 +29,9 @@ namespace MochiApi.Services
             return await _context.Wallets.AsNoTracking()
             .Include(w => w.WalletMembers)
             .ThenInclude(wM => wM.User)
-            .Where(w => w.Members.Where(m => m.Id == userId).Count() > 0).ToListAsync();
+            .Where(w =>
+            w.WalletMembers.Where(m => m.UserId == userId && m.Status == MemberStatus.Accepted).Count() > 0)
+            .ToListAsync();
         }
 
         public async Task<Wallet> CreateWallet(int userId, CreateWalletDto walletDto)
@@ -125,7 +127,7 @@ namespace MochiApi.Services
 
                     if (updateWallet.Type == WalletType.Group)
                     {
-                        if (updateWallet.MemberIds.Count == 0)
+                        if (updateWallet.MemberIds == null || updateWallet.MemberIds.Count == 0)
                         {
                             throw new ApiException("Ví nhóm có ít nhất 1 người", 400);
                         }
@@ -197,15 +199,27 @@ namespace MochiApi.Services
 
         public async Task DeleteWallet(int walletId, int userId)
         {
-            var wallet = await _context.Wallets.Where(w => w.Id == walletId && w.Members.Any(m => m.Id == userId)).FirstOrDefaultAsync();
+            var wallet = await _context.Wallets.Include(w => w.WalletMembers)
+            .Where(w => w.Id == walletId &&
+            w.WalletMembers.Any(m => m.UserId == userId && m.Status == MemberStatus.Accepted)).FirstOrDefaultAsync();
 
             if (wallet == null)
+            {
+                throw new ApiException("Wallet not found!", 400);
+            }
+
+            var walletMember = wallet.WalletMembers.FirstOrDefault(w => w.UserId == userId);
+            if (walletMember == null)
             {
                 throw new ApiException("Wallet not found!", 400);
             }
             if (wallet.IsDefault)
             {
                 throw new ApiException("Default wallet can not be deleted!", 400);
+            }
+            if (walletMember.Status != MemberStatus.Accepted || walletMember.Role != MemberRole.Admin)
+            {
+                throw new ApiException("You are not authorized to do this action!", 400);
             }
 
             _context.Remove(wallet);

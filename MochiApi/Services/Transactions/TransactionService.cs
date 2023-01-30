@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MochiApi.Dtos;
 using MochiApi.Error;
 using MochiApi.Models;
+using static MochiApi.Common.Enum;
 
 namespace MochiApi.Services
 {
@@ -94,7 +95,7 @@ namespace MochiApi.Services
             {
                 return trans;
             }
-            var participants = trans.ParticipantIds.Split(";", StringSplitOptions.RemoveEmptyEntries).Select(id => Convert.ToInt32(id))
+            var participants = trans.ParticipantIds.Split(";", StringSplitOptions.RemoveEmptyEntries).Where(i => i.All(char.IsDigit)).Select(id => Convert.ToInt32(id))
             .ToList();
 
             if (participants.Count > 0)
@@ -139,7 +140,8 @@ namespace MochiApi.Services
 
                 if (transDto.ParticipantIds.Count > 0)
                 {
-                    var memberIds = await _context.WalletMembers.Where(wM => wM.WalletId == walletId)
+                    var memberIds = await _context.WalletMembers
+                    .Where(wM => wM.WalletId == walletId && wM.Status == MemberStatus.Accepted)
                     .Select(wM => wM.UserId).ToListAsync();
                     var invalidUsers = transDto.ParticipantIds
                 .Except(memberIds).Select(id => id).ToList();
@@ -147,7 +149,7 @@ namespace MochiApi.Services
                     {
                         throw new ApiException("Users " + string.Join(',', invalidUsers) + " not exist!", 400);
                     }
-                    trans.ParticipantIds = String.Join(';', transDto.ParticipantIds.Where(id => id != trans.CreatorId));
+                    trans.ParticipantIds = String.Join(';', transDto.ParticipantIds.Where(id => id != trans.CreatorId).ToList());
                 }
 
                 await _context.SaveChangesAsync();
