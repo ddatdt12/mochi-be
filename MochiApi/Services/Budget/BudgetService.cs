@@ -30,16 +30,20 @@ namespace MochiApi.Services
 
         public async Task<IEnumerable<Budget>> GetBudgets(int walletId, int month, int year)
         {
-            var budgets = await _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year)
+            var budgets = await _context
+            .Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year)
             .Include(b => b.Category)
+            .Include(b => b.Wallet)
             .ToListAsync();
 
             return budgets;
         }
         public async Task<Budget> GetBudgetById(int id, int walletId, int month, int year)
         {
-            var budget = await _context.Budgets.AsNoTracking().Where(b => b.WalletId == walletId && b.Month == month && b.Year == year)
+            var budget = await _context.Budgets.AsNoTracking()
+            .Where(b => b.WalletId == walletId && b.Month == month && b.Year == year)
             .Include(b => b.Category)
+            .Include(b => b.Wallet)
             .FirstOrDefaultAsync();
 
             return budget;
