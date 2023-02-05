@@ -42,7 +42,10 @@ namespace MochiApi.Controllers
         public async Task<IActionResult> GetInvitations()
         {
             var userId = HttpContext.Items["UserId"] as int?;
-            var invitations = await _context.Invitations.Where(u => u.UserId == userId).ToListAsync();
+            var invitations = await _context.Invitations
+            .Include(i => i.Sender)
+            .Include(i => i.Wallet)
+            .Where(u => u.UserId == userId).ToListAsync();
 
             var invitationDtos = _mapper.Map<IEnumerable<InvitationDto>>(invitations);
             return Ok(new ApiResponse<IEnumerable<InvitationDto>>(invitationDtos, "Get invitations"));

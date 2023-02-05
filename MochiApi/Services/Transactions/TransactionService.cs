@@ -36,7 +36,7 @@ namespace MochiApi.Services
             }
             else
             {
-                transQuery = transQuery.Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == Common.Enum.MemberStatus.Accepted));
+                transQuery = transQuery.Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted));
             }
 
             transQuery = transQuery.Include(t => t.Category)

@@ -55,7 +55,8 @@ namespace MochiApi.Common
         {
             New,
             Accepted,
-            Declined
+            Declined,
+            Expired,
         }
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public enum InvitationAction

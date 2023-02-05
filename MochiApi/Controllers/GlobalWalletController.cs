@@ -31,6 +31,48 @@ namespace MochiApi.Controllers
             _context = context;
         }
 
+        [HttpGet("transactions")]
+        [Produces(typeof(IEnumerable<TransactionDto>))]
+        public async Task<IActionResult> GetTransactions([FromQuery] TransactionFilterDto filter)
+        {
+            int userId = HttpContext.Items["UserId"] as int? ?? 0;
+            var transList = await _transactionService.GetTransactions(userId, null, filter);
+            var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
+            var groupByDates = transRes.GroupBy(tr => tr.CreatedAt.Date);
+            List<TransactionGroupDateDto> response = new List<TransactionGroupDateDto>();
+            long totalIncome = 0, totalExpense = 0;
+            foreach (var group in groupByDates)
+            {
+                TransactionGroupDateDto item = new TransactionGroupDateDto { Date = group.Key };
+                long revenue = 0;
+
+                foreach (var transaction in group)
+                {
+                    if (transaction.Category!.Type == CategoryType.Income)
+                    {
+                        totalIncome += transaction.Amount;
+                        revenue += transaction.Amount;
+                    }
+                    else
+                    {
+                        totalExpense += transaction.Amount;
+                        revenue -= transaction.Amount;
+                    }
+                    item.Transactions.Add(transaction);
+                }
+
+                item.Revenue = revenue;
+                response.Add(item);
+            }
+
+            return Ok(new ApiResponse<object>(new
+            {
+                totalIncome,
+                totalExpense,
+                details = response
+            }, "Get transaction statistic group by date successfully!"));
+        }
+
         [HttpGet("transactions/recently")]
         [Produces(typeof(IEnumerable<TransactionDto>))]
         public async Task<IActionResult> GetRecentlyTransactions([FromQuery] TransactionFilterDto filter)
