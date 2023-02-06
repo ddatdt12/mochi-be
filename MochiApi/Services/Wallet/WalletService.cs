@@ -124,47 +124,24 @@ namespace MochiApi.Services
 
                 if (updateWallet.Type.HasValue)
                 {
-
-                    if (updateWallet.Type == WalletType.Group)
+                    if (updateWallet.Type == WalletType.Group && wallet.Type == WalletType.Personal)
                     {
-                        if (updateWallet.MemberIds == null || updateWallet.MemberIds.Count == 0)
+                        var memberIds = updateWallet?.MemberIds?.Where(mId => mId != userId).ToList();
+                        if (memberIds == null || memberIds.Count == 0)
                         {
                             throw new ApiException("Ví nhóm có ít nhất 1 người", 400);
                         }
-                        var memberIds = updateWallet.MemberIds.Where(mId => mId != userId).ToList();
                         var alreadyMemberIds = await _context.WalletMembers.Where(m => m.WalletId == walletId && m.UserId != userId)
                         .Select(m => m.UserId).ToListAsync();
 
-                        if (updateWallet.Type != wallet.Type)
+                        await _context.WalletMembers.AddRangeAsync(memberIds.Select(mId =>
+                        new WalletMember
                         {
-                            await _context.WalletMembers.AddRangeAsync(memberIds.Select(mId =>
-                            new WalletMember
-                            {
-                                WalletId = wallet.Id,
-                                Role = MemberRole.Member,
-                                UserId = mId,
-                            }).ToList());
-                            notis = await CreateInvitations(userId, wallet, memberIds);
-                        }
-                        else
-                        {
-                            var removedUsedIds = alreadyMemberIds.Except(memberIds).ToList();
-                            var newUserIdUsedIds = memberIds.Except(alreadyMemberIds).ToList();
-
-                            await _context.WalletMembers.AddRangeAsync(newUserIdUsedIds.Select(mId =>
-                            new WalletMember
-                            {
-                                WalletId = wallet.Id,
-                                Role = MemberRole.Member,
-                                UserId = mId,
-                            }).ToList());
-
-                            if (removedUsedIds.Count > 0)
-                            {
-                                await _context.WalletMembers.Where(wM => wM.WalletId == wallet.Id && removedUsedIds.Contains(wM.UserId)).DeleteFromQueryAsync();
-                            }
-                            notis = await CreateInvitations(userId, wallet, newUserIdUsedIds);
-                        }
+                            WalletId = wallet.Id,
+                            Role = MemberRole.Member,
+                            UserId = mId,
+                        }).ToList());
+                        notis = await CreateInvitations(userId, wallet, memberIds);
                     }
                     else
                     {
@@ -192,7 +169,7 @@ namespace MochiApi.Services
             }
             catch (Exception)
             {
-
+                await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -225,11 +202,11 @@ namespace MochiApi.Services
             _context.Remove(wallet);
             await _context.SaveChangesAsync();
         }
-        public async Task AddMemberToWallet(int userId, int walletId, int memberId)
+        public async Task AddMemberToWallet(int userId, int walletId, CreateWalletMemberDto createDto)
         {
-            if (userId == memberId)
+            if (userId == createDto.UserId)
             {
-                throw new ApiException("You can not remove yourself", 400);
+                throw new ApiException("You can not add yourself to wallet", 400);
             }
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -247,22 +224,41 @@ namespace MochiApi.Services
                     throw new ApiException("Wallet is not group!", 400);
                 }
 
-                var adminMember = wallet.WalletMembers.FirstOrDefault(wM => wM.UserId == userId);
-                if (adminMember == null || adminMember.Role != MemberRole.Admin)
+                var owner = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == userId).FirstOrDefaultAsync();
+
+                if (owner!.Role != MemberRole.Admin)
                 {
-                    throw new ApiException("You are not authorized!", 401);
+                    throw new ApiException("You are not authorized to delete user", 400);
                 }
 
-                var IsMember = await _context.WalletMembers.Where(w => w.WalletId == walletId && w.UserId == memberId && w.Status == MemberStatus.Accepted).AnyAsync();
-
-                if (IsMember)
+                var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == createDto.UserId).FirstOrDefaultAsync();
+                if (member != null)
                 {
-                    throw new ApiException("User already member!", 400);
+                    if (member.Status == MemberStatus.Declined)
+                    {
+                        throw new ApiException("The user has  declined the invitation to join the wallet .", 400);
+                    }
+                    else
+                    if (member.Status == MemberStatus.Pending)
+                    {
+                        throw new ApiException("Invitation to the group is waiting to be accepted.", 400);
+                    }
+                    else
+                    {
+                        throw new ApiException("User is already a member.", 400);
+                    }
                 }
-                var walletMember = new WalletMember { WalletId = wallet.Id, UserId = memberId, };
+
+                var walletMember = new WalletMember
+                {
+                    WalletId = wallet.Id,
+                    UserId = createDto.UserId,
+                    Role = createDto.Role,
+                    Status = MemberStatus.Pending
+                };
                 await _context.WalletMembers.AddAsync(walletMember);
 
-                var notis = await CreateInvitations(userId, wallet, memberIds: new List<int>() { memberId });
+                var notis = await CreateInvitations(userId, wallet, memberIds: new List<int>() { createDto.UserId });
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -279,33 +275,60 @@ namespace MochiApi.Services
                 throw;
             }
         }
-        public async Task RemoveMemberFromWallet(int userId, int walletId, int memberId)
+        public async Task UpdateMemberToWallet(int userId, int walletId, CreateWalletMemberDto createDto)
+        {
+            if (userId == createDto.UserId)
+            {
+                throw new ApiException("You can not update yourself to wallet", 400);
+            }
+
+            var owner = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == userId).FirstOrDefaultAsync();
+
+            if (owner == null || owner!.Role != MemberRole.Admin)
+            {
+                throw new ApiException("You are not authorized to update member", 400);
+            }
+
+            var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == createDto.UserId).FirstOrDefaultAsync();
+            if (member == null)
+            {
+                throw new ApiException("Member not found", 404);
+            }
+
+            if (member != null)
+            {
+                if (member.Status == MemberStatus.Declined)
+                {
+                    throw new ApiException("The user has  declined the invitation to join the wallet .", 400);
+                }
+                else
+                if (member.Status == MemberStatus.Pending)
+                {
+                    throw new ApiException("Invitation to the group is waiting to be accepted.", 400);
+                }
+            }
+
+            member!.Role = createDto.Role;
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteMemberInWallet(int userId, int walletId, int memberId)
         {
             if (userId == memberId)
             {
                 throw new ApiException("You can not remove yourself", 400);
             }
-            var wallet = await _context.Wallets.Where(w => w.Id == walletId).Include(w => w.WalletMembers).FirstOrDefaultAsync();
-
-            if (wallet == null)
+            var owner = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == userId).FirstOrDefaultAsync();
+            if (owner!.Role != MemberRole.Admin)
             {
-                throw new ApiException("Wallet not found!", 400);
-            }
-            if (wallet.Type != WalletType.Group)
-            {
-                throw new ApiException("Wallet is not group!", 400);
-            }
-            var adminMember = wallet.WalletMembers.FirstOrDefault(wM => wM.UserId == userId);
-            if (adminMember == null || adminMember.Role != MemberRole.Admin)
-            {
-                throw new ApiException("You are not authorized!", 401);
+                throw new ApiException("You are not authorized to delete user", 400);
             }
 
-            var member = await _context.WalletMembers.Where(w => w.WalletId == walletId && w.UserId == memberId).FirstOrDefaultAsync();
-
+            var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == memberId).FirstOrDefaultAsync();
             if (member == null)
             {
-                throw new ApiException("User is not a member of wallet!", 400);
+                throw new ApiException("Member not found", 404);
             }
 
             _context.WalletMembers.Remove(member);
@@ -361,21 +384,6 @@ namespace MochiApi.Services
 
             return walletMembers;
         }
-        public async Task DeleteMemberInWallet(int userId, int walletId, int memberId)
-        {
-            var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == memberId).FirstOrDefaultAsync();
-            var owner = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == userId).FirstOrDefaultAsync();
-            if (member == null)
-            {
-                throw new ApiException("User not found", 404);
-            }
-            if (owner!.Role != MemberRole.Admin)
-            {
-                throw new ApiException("You are not authorized to delete user", 400);
-            }
-            _context.WalletMembers.Remove(member);
-        }
-
         public async Task UpdateWalletBalance(int walletId, int amount)
         {
             var wallet = await _context.Wallets
