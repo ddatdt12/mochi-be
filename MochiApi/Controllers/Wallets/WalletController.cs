@@ -81,11 +81,11 @@ namespace MochiApi.Controllers
 
         [HttpPost("{id}/members")]
         [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> AddMember(int id, [FromBody] CreateWalletMemberDto createDto)
+        public async Task<IActionResult> AddMember(int id, [FromBody] List<CreateWalletMemberDto> createDtos)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
 
-            await _walletService.AddMemberToWallet(userId, id, createDto);
+            await _walletService.AddMembersToWallet(userId, id, createDtos);
             return NoContent();
         }
 

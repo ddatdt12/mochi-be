@@ -23,11 +23,18 @@ namespace MochiApi.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<IActionResult> GetUsers([EmailAddress] string email)
+        public async Task<IActionResult> GetUsers([EmailAddress] string email, int? walletId)
         {
             var user = await _context.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
-
             var userDto = _mapper.Map<BasicUserDto>(user);
+
+            if (user != null && walletId != null)
+            {
+                var walletMember = await _context.WalletMembers.Where(wM => wM.UserId == user.Id && wM.WalletId == walletId).FirstOrDefaultAsync();
+
+                _mapper.Map(walletMember, userDto.WalletMember);
+            }
+
             return Ok(new ApiResponse<BasicUserDto>(userDto, "search users by email"));
         }
     }

@@ -202,9 +202,9 @@ namespace MochiApi.Services
             _context.Remove(wallet);
             await _context.SaveChangesAsync();
         }
-        public async Task AddMemberToWallet(int userId, int walletId, CreateWalletMemberDto createDto)
+        public async Task AddMembersToWallet(int userId, int walletId, List<CreateWalletMemberDto> createDtos)
         {
-            if (userId == createDto.UserId)
+            if (createDtos.Any(u => u.UserId == userId))
             {
                 throw new ApiException("You can not add yourself to wallet", 400);
             }
@@ -230,35 +230,34 @@ namespace MochiApi.Services
                 {
                     throw new ApiException("You are not authorized to delete user", 400);
                 }
+                var memberIds = createDtos.Select(c => c.UserId).ToList();
+                var members = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && memberIds.Contains(wM.UserId)).ToListAsync();
 
-                var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == createDto.UserId).FirstOrDefaultAsync();
-                if (member != null)
+                foreach (var member in members)
                 {
-                    if (member.Status == MemberStatus.Declined)
+                    switch (member.Status)
                     {
-                        throw new ApiException("The user has  declined the invitation to join the wallet .", 400);
-                    }
-                    else
-                    if (member.Status == MemberStatus.Pending)
-                    {
-                        throw new ApiException("Invitation to the group is waiting to be accepted.", 400);
-                    }
-                    else
-                    {
-                        throw new ApiException("User is already a member.", 400);
+                        case MemberStatus.Accepted:
+                            throw new ApiException("User is already a member.", 400);
+                        case MemberStatus.Declined:
+                            throw new ApiException("The user has  declined the invitation to join the wallet .", 400);
+                        case MemberStatus.Pending:
+                            throw new ApiException("Invitation to the group is waiting to be accepted.", 400);
+                        default:
+                            break;
                     }
                 }
 
-                var walletMember = new WalletMember
+                var walletMems = createDtos.Select(wM => new WalletMember
                 {
                     WalletId = wallet.Id,
-                    UserId = createDto.UserId,
-                    Role = createDto.Role,
+                    UserId = wM.UserId,
+                    Role = wM.Role,
                     Status = MemberStatus.Pending
-                };
-                await _context.WalletMembers.AddAsync(walletMember);
+                });
+                await _context.WalletMembers.AddRangeAsync(walletMems);
 
-                var notis = await CreateInvitations(userId, wallet, memberIds: new List<int>() { createDto.UserId });
+                var notis = await CreateInvitations(userId, wallet, memberIds: memberIds);
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
