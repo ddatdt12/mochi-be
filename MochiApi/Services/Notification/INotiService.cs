@@ -9,5 +9,7 @@ namespace MochiApi.Services
         Task<IEnumerable<Notification>> CreateListNoti(IEnumerable<CreateNotificationDto> notiDto, bool saveChanges = false);
         Task<Notification> CreateNoti(CreateNotificationDto notiDto);
         Task<IEnumerable<Notification>> GetNotifications(int userId);
+        Task MarkSeen(int id);
+        Task MarkSeenAllNotis(int userId);
     }
 }

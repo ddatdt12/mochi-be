@@ -33,5 +33,23 @@ namespace MochiApi.Controllers
             var notiDtos = _mapper.Map<IEnumerable<NotificationDto>>(notis);
             return Ok(new ApiResponse<object>(notiDtos, "Get notifications"));
         }
+
+        [HttpGet("{id}/seen")]
+        [Produces(typeof(ApiResponse<IEnumerable<NotificationDto>>))]
+        public async Task<IActionResult> TriggerSeen(int id)
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
+            await _notiService.MarkSeen(id);
+            return NoContent();
+        }
+
+        [HttpGet("seen-all")]
+        [Produces(typeof(ApiResponse<IEnumerable<NotificationDto>>))]
+        public async Task<IActionResult> TriggerSeenAll()
+        {
+            var userId = HttpContext.Items["UserId"] as int?;
+            await _notiService.MarkSeenAllNotis(userId ?? 0);
+            return NoContent();
+        }
     }
 }

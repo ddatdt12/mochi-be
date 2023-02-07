@@ -27,6 +27,7 @@ namespace MochiApi.Models
         public int? BudgetId { get; set; }
         public Budget? Budget { get; set; }
         public int? InvitationId { get; set; }
+        public bool IsSeen { get; set; }
         public Invitation? Invitation { get; set; }
         public DateTime CreatedAt { get; set; }
     }

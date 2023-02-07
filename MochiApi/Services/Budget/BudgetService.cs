@@ -137,8 +137,11 @@ namespace MochiApi.Services
             {
                 long beforeSpendAmout = budget.SpentAmount;
                 budget.SpentAmount += amount;
+                int dayCount = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+                double dailySpentRecommend = budget.LimitAmount / dayCount;
+                int currentDay = DateTime.Now.Day;
 
-                IEnumerable<Notification>? notisList = null;
+                List<Notification> notisList = new List<Notification>();
                 if (beforeSpendAmout <= budget.LimitAmount && budget.SpentAmount > budget.LimitAmount)
                 {
                     var memberIds = await _context.WalletMembers
@@ -156,7 +159,26 @@ namespace MochiApi.Services
                         Description = NotiTemplate.GetRemindBudgetExceedLimit(budget.Category?.Name ?? "", month, year),
                     });
 
-                    notisList = await _notiService.CreateListNoti(notisDto, false);
+                    notisList.AddRange(await _notiService.CreateListNoti(notisDto, false));
+                }
+
+                if (beforeSpendAmout <= currentDay * dailySpentRecommend && budget.SpentAmount > currentDay * dailySpentRecommend)
+                {
+                    var memberIds = await _context.WalletMembers
+             .Where(wM => wM.WalletId == budget.WalletId && wM.Status == Common.Enum.MemberStatus.Accepted)
+             .Select(wM => wM.UserId).ToArrayAsync();
+
+                    await _context.Entry(budget).Reference(b => b.Category).LoadAsync();
+                    var notisDto = memberIds.Select(id => new CreateNotificationDto
+                    {
+                        UserId = id,
+                        BudgetId = budget.Id,
+                        WalletId = budget.WalletId,
+                        Type = Common.Enum.NotificationType.BudgetExceed,
+                        Description = NotiTemplate.GetRemindBudgetExceedLimitInDay(budget.Category?.Name ?? ""),
+                    });
+
+                    notisList.AddRange(await _notiService.CreateListNoti(notisDto, false));
                 }
 
                 if (saveChanges)

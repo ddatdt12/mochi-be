@@ -51,5 +51,23 @@ namespace MochiApi.Services
 
             return notis;
         }
+
+        public async Task MarkSeen(int id)
+        {
+            var noti = await _context.Notifcations.Where(n => n.Id == id).FirstOrDefaultAsync();
+
+            if (noti == null)
+            {
+                throw new ApiException("Notification not found", 400);
+            }
+
+            noti.IsSeen = true;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task MarkSeenAllNotis(int userId)
+        {
+            await _context.Notifcations.Where(n => n.UserId == userId).UpdateFromQueryAsync(no => new Notification { IsSeen = true });
+        }
     }
 }

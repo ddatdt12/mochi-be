@@ -22,6 +22,7 @@ namespace MochiApi.Dtos
         public int? TransactionId { get; set; }
         public TransactionDto? Transaction { get; set; }
         public int? BudgetId { get; set; }
+        public bool IsSeen{ get; set; }
         public BudgetDto? Budget { get; set; }
         public DateTime CreatedAt { get; set; }
     }
