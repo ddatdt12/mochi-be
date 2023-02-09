@@ -288,7 +288,7 @@ namespace MochiApi.Services
                 throw new ApiException("You are not authorized to update member", 400);
             }
 
-            var members = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && updateDtos.Any(m => m.UserId == wM.UserId))
+            var members = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId != owner.UserId && updateDtos.Any(m => m.UserId == wM.UserId))
             .ToListAsync();
             if (members == null)
             {
