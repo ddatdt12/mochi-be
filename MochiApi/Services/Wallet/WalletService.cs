@@ -274,9 +274,9 @@ namespace MochiApi.Services
                 throw;
             }
         }
-        public async Task UpdateMemberToWallet(int userId, int walletId, CreateWalletMemberDto createDto)
+        public async Task UpdateMembersToWallet(int userId, int walletId, List<CreateWalletMemberDto> updateDtos)
         {
-            if (userId == createDto.UserId)
+            if (updateDtos.Any(u => u.UserId == userId))
             {
                 throw new ApiException("You can not update yourself to wallet", 400);
             }
@@ -288,26 +288,32 @@ namespace MochiApi.Services
                 throw new ApiException("You are not authorized to update member", 400);
             }
 
-            var member = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && wM.UserId == createDto.UserId).FirstOrDefaultAsync();
-            if (member == null)
+            var members = await _context.WalletMembers.Where(wM => wM.WalletId == walletId && updateDtos.Any(m => m.UserId == wM.UserId))
+            .ToListAsync();
+            if (members == null)
             {
                 throw new ApiException("Member not found", 404);
             }
 
-            if (member != null)
+            var updateDataMap = updateDtos.ToDictionary(u => u.UserId, u => u.Role);
+            foreach (var member in members)
             {
                 if (member.Status == MemberStatus.Declined)
                 {
                     throw new ApiException("The user has  declined the invitation to join the wallet .", 400);
                 }
                 else
-                if (member.Status == MemberStatus.Pending)
+                   if (member.Status == MemberStatus.Pending)
                 {
                     throw new ApiException("Invitation to the group is waiting to be accepted.", 400);
                 }
+
+                if (updateDataMap.ContainsKey(member.UserId))
+                {
+                    member!.Role = updateDataMap[member.UserId];
+                }
             }
 
-            member!.Role = createDto.Role;
 
             await _context.SaveChangesAsync();
         }

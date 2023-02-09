@@ -89,13 +89,12 @@ namespace MochiApi.Controllers
             return NoContent();
         }
 
-        [HttpPut("{id}/members/{memberId}")]
+        [HttpPut("{id}/members")]
         [Produces(typeof(NoContentResult))]
-        public async Task<IActionResult> UpdateMember(int id, int memberId, [FromBody] CreateWalletMemberDto createDto)
+        public async Task<IActionResult> UpdateMember(int id, [FromBody] List<CreateWalletMemberDto> updates)
         {
             var userId = (int)(HttpContext.Items["UserId"] as int?)!;
-            createDto.UserId = memberId;
-            await _walletService.UpdateMemberToWallet(userId, id, createDto);
+            await _walletService.UpdateMembersToWallet(userId, id, updates);
             return NoContent();
         }
         [HttpDelete("{id}/members/{memberId}")]

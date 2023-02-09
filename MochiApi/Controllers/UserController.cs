@@ -31,8 +31,17 @@ namespace MochiApi.Controllers
             if (user != null && walletId != null)
             {
                 var walletMember = await _context.WalletMembers.Where(wM => wM.UserId == user.Id && wM.WalletId == walletId).FirstOrDefaultAsync();
-
-                _mapper.Map(walletMember, userDto.WalletMember);
+                if (walletMember != null)
+                {
+                    userDto.WalletMember = new WalletMemberDto
+                    {
+                        UserId = walletMember.UserId,
+                        WalletId = walletMember.WalletId,
+                        JoinAt = walletMember.JoinAt,
+                        Role = walletMember.Role,
+                        Status = walletMember.Status
+                    };
+                }
             }
 
             return Ok(new ApiResponse<BasicUserDto>(userDto, "search users by email"));
