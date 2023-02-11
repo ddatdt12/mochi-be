@@ -124,9 +124,19 @@ namespace MochiApi.Services
             {
                 trans.ChildAmountSum = await _context.Transactions.Where(t => t.RelevantTransactionId == trans.Id).Select(t => t.Amount).SumAsync();
             }
+
             return trans;
         }
-
+        public async Task<List<Transaction>> GetChildTransactionsOfParentTrans(int id)
+        {
+            var parentTran = await _context.Transactions.Where(t => t.Id == id)
+            .AsNoTracking().FirstOrDefaultAsync();
+            if (parentTran!.Category!.Type != CategoryType.Debt && parentTran.Category.Type != CategoryType.Loan)
+            {
+                return new List<Transaction>();
+            }
+            return await _context.Transactions.Where(t => t.RelevantTransactionId == parentTran.Id).ToListAsync();
+        }
 
         private async Task ValidatePrivateTrans(Transaction newTrans, Category? cate = null)
         {

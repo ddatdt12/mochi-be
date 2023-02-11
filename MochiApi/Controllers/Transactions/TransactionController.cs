@@ -103,6 +103,22 @@ namespace MochiApi.Controllers
             return Ok(new ApiResponse<object>(transRes, "Get recently transactions successfully!"));
         }
 
+
+        [HttpGet("{id}/child-transactions")]
+        public async Task<IActionResult> GetChildTransactions(int id, int walletId)
+        {
+            int userId = HttpContext.Items["UserId"] as int? ?? 0;
+            if (!await _walletService.VerifyIsUserInWallet(walletId, (int)userId!))
+            {
+                throw new ApiException("Access denied!", 400);
+            }
+            var transList = await _transactionService.GetChildTransactionsOfParentTrans(id);
+            var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
+            var response = transRes.GroupBy(tr => tr.CreatedAt.Date).Select(g => new TransactionGroupDateDto { Date = g.Key, Transactions = g.ToList() });
+
+            return Ok(new ApiResponse<object>(response, "Get child transaction group by date successfully!"));
+        }
+
         [HttpPost]
         [Produces(typeof(ApiResponse<TransactionDto>))]
         public async Task<IActionResult> CreateTransaction(int walletId, [FromBody] CreateTransactionDto createTransactionDto)

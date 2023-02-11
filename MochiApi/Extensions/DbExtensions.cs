@@ -34,28 +34,32 @@ namespace MochiApi.Extensions
                         Role = Common.Enum.MemberRole.Admin,
                         JoinAt  = date,
                         UserId = 1,
-                        WalletId = 1
+                        WalletId = 1,
+                        Status = MemberStatus.Accepted
                     },
                     new WalletMember
                     {
                         Role = Common.Enum.MemberRole.Admin,
                         JoinAt  = date,
                         UserId = 2,
-                        WalletId = 2
+                        WalletId = 2,
+                        Status = MemberStatus.Accepted
                     },
                     new WalletMember
                     {
                         Role = Common.Enum.MemberRole.Admin,
                         JoinAt  = date,
                         UserId = 3,
-                        WalletId = 3
+                        WalletId = 3,
+                        Status = MemberStatus.Accepted
                     },
                     new WalletMember
                     {
                         Role = Common.Enum.MemberRole.Admin,
                         JoinAt  = date,
                         UserId = 4,
-                        WalletId = 4
+                        WalletId = 4,
+                        Status = MemberStatus.Accepted
                     },
                 }
                 );
@@ -228,7 +232,7 @@ namespace MochiApi.Extensions
                     }); ;
                 }
             }
-            
+
 
             modelBuilder.Entity<Category>().HasData(baseListCateogry);
             modelBuilder.Entity<Category>().HasData(listCategory);
