@@ -9,19 +9,19 @@ namespace MochiApi.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "UpdatedAt",
-                table: "Transactions");
+            //migrationBuilder.DropColumn(
+            //    name: "UpdatedAt",
+            //    table: "Transactions");
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                table: "Transactions",
-                type: "datetime(6)",
-                nullable: false,
-                defaultValueSql: "UTC_TIMESTAMP()",
-                oldClrType: typeof(DateTime),
-                oldType: "datetime(6)",
-                oldNullable: true);
+            //migrationBuilder.AlterColumn<DateTime>(
+            //    name: "CreatedAt",
+            //    table: "Transactions",
+            //    type: "datetime(6)",
+            //    nullable: false,
+            //    defaultValueSql: "UTC_TIMESTAMP()",
+            //    oldClrType: typeof(DateTime),
+            //    oldType: "datetime(6)",
+            //    oldNullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Image",
@@ -36,20 +36,20 @@ namespace MochiApi.Migrations
                 name: "Image",
                 table: "Transactions");
 
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "CreatedAt",
-                table: "Transactions",
-                type: "datetime(6)",
-                nullable: true,
-                oldClrType: typeof(DateTime),
-                oldType: "datetime(6)",
-                oldDefaultValueSql: "UTC_TIMESTAMP()");
+            //migrationBuilder.AlterColumn<DateTime>(
+            //    name: "CreatedAt",
+            //    table: "Transactions",
+            //    type: "datetime(6)",
+            //    nullable: true,
+            //    oldClrType: typeof(DateTime),
+            //    oldType: "datetime(6)",
+            //    oldDefaultValueSql: "UTC_TIMESTAMP()");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "UpdatedAt",
-                table: "Transactions",
-                type: "datetime(6)",
-                nullable: true);
+            //migrationBuilder.AddColumn<DateTime>(
+            //    name: "UpdatedAt",
+            //    table: "Transactions",
+            //    type: "datetime(6)",
+            //    nullable: true);
         }
     }
 }

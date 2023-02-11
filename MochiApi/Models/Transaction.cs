@@ -12,6 +12,8 @@ namespace MochiApi.Models
             Note = String.Empty;
             ParticipantIds = String.Empty;
             Participants = new List<User>();
+            CreatedAt = DateTime.UtcNow;
+            CreatedAt = DateTime.UtcNow;
         }
         public int Id { get; set; }
         public int Amount { get; set; }
@@ -27,6 +29,21 @@ namespace MochiApi.Models
         [Required]
         public DateTime CreatedAt { get; set; }
         public string? Image { get; set; }
+        public int? RelevantTransactionId { get; set; }
+        public Transaction? RelevantTransaction { get; set; }
+        public string UnknownParticipantsStr { get; set; }
+        [NotMapped]
+        public List<string> UnknownParticipants
+        {
+            get
+            {
+                return UnknownParticipantsStr.Split(";", StringSplitOptions.RemoveEmptyEntries).ToList();
+            }
+            set
+            {
+                UnknownParticipantsStr = string.Join(";", value);
+            }
+        }
         public string ParticipantIds { get; set; }
         [NotMapped]
         public List<User> Participants { get; set; }
@@ -35,7 +52,6 @@ namespace MochiApi.Models
     {
         public void Configure(EntityTypeBuilder<Transaction> builder)
         {
-            builder.Property(u => u.CreatedAt).HasDefaultValueSql("UTC_TIMESTAMP()");
         }
     }
 }

@@ -8,7 +8,11 @@ namespace MochiApi.Common
         public enum CategoryType
         {
             Income,
-            Expense
+            Expense,
+            Debt,
+            Repayment,
+            Loan,
+            DebtCollection
         }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]

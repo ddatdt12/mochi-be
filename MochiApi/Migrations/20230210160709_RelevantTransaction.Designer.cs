@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MochiApi.Models;
 
@@ -10,9 +11,10 @@ using MochiApi.Models;
 namespace MochiApi.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20230210160709_RelevantTransaction")]
+    partial class RelevantTransaction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,7 +109,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 2,
                             Group = 1,
-                            Icon = "2",
+                            Icon = "1",
                             Name = "Di chuyển",
                             Type = 1
                         },
@@ -115,7 +117,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 3,
                             Group = 1,
-                            Icon = "3",
+                            Icon = "1",
                             Name = "Thuê nhà",
                             Type = 1
                         },
@@ -123,7 +125,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 4,
                             Group = 1,
-                            Icon = "4",
+                            Icon = "1",
                             Name = "Hóa đơn điện thoại",
                             Type = 1
                         },
@@ -131,7 +133,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 5,
                             Group = 1,
-                            Icon = "5",
+                            Icon = "1",
                             Name = "Hóa đơn internet",
                             Type = 1
                         },
@@ -139,7 +141,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 6,
                             Group = 1,
-                            Icon = "6",
+                            Icon = "1",
                             Name = "Hóa đơn tiện ích khác",
                             Type = 1
                         },
@@ -147,7 +149,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 7,
                             Group = 2,
-                            Icon = "7",
+                            Icon = "1",
                             Name = "Sửa & trang trí khác",
                             Type = 1
                         },
@@ -155,7 +157,7 @@ namespace MochiApi.Migrations
                         {
                             Id = 8,
                             Group = 1,
-                            Icon = "8",
+                            Icon = "1",
                             Name = "Bảo dưỡng xe",
                             Type = 1
                         },
@@ -212,8 +214,8 @@ namespace MochiApi.Migrations
                             Id = 15,
                             Group = 4,
                             Icon = "1",
-                            Name = "Đi vay",
-                            Type = 2
+                            Name = "Nợ",
+                            Type = 1
                         },
                         new
                         {
@@ -221,51 +223,11 @@ namespace MochiApi.Migrations
                             Group = 4,
                             Icon = "1",
                             Name = "Cho vay",
-                            Type = 4
+                            Type = 1
                         },
                         new
                         {
                             Id = 17,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Trả Nợ",
-                            Type = 3
-                        },
-                        new
-                        {
-                            Id = 18,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Thu Nợ",
-                            Type = 5
-                        },
-                        new
-                        {
-                            Id = 19,
-                            Group = 3,
-                            Icon = "3",
-                            Name = "Làm đẹp",
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 20,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Quà tặng và quyên góp",
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 21,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Dịch vụ trực tuyến",
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 22,
                             Group = 1,
                             Icon = "1",
                             Name = "Ăn uống",
@@ -274,10 +236,55 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 23,
+                            Id = 18,
                             Group = 1,
-                            Icon = "2",
+                            Icon = "1",
                             Name = "Di chuyển",
+                            Type = 1,
+                            WalletId = 1
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Thuê nhà",
+                            Type = 1,
+                            WalletId = 1
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Hóa đơn điện thoại",
+                            Type = 1,
+                            WalletId = 1
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Hóa đơn internet",
+                            Type = 1,
+                            WalletId = 1
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Hóa đơn tiện ích khác",
+                            Type = 1,
+                            WalletId = 1
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Group = 2,
+                            Icon = "1",
+                            Name = "Sửa & trang trí khác",
                             Type = 1,
                             WalletId = 1
                         },
@@ -285,17 +292,17 @@ namespace MochiApi.Migrations
                         {
                             Id = 24,
                             Group = 1,
-                            Icon = "3",
-                            Name = "Thuê nhà",
+                            Icon = "1",
+                            Name = "Bảo dưỡng xe",
                             Type = 1,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 25,
-                            Group = 1,
-                            Icon = "4",
-                            Name = "Hóa đơn điện thoại",
+                            Group = 2,
+                            Icon = "1",
+                            Name = "Khám sức khỏe",
                             Type = 1,
                             WalletId = 1
                         },
@@ -303,158 +310,68 @@ namespace MochiApi.Migrations
                         {
                             Id = 26,
                             Group = 1,
-                            Icon = "5",
-                            Name = "Hóa đơn internet",
+                            Icon = "1",
+                            Name = "Thể dục thể thao",
                             Type = 1,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 27,
-                            Group = 1,
-                            Icon = "6",
-                            Name = "Hóa đơn tiện ích khác",
-                            Type = 1,
+                            Group = 0,
+                            Icon = "1",
+                            Name = "Lương",
+                            Type = 0,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 28,
-                            Group = 2,
-                            Icon = "7",
-                            Name = "Sửa & trang trí khác",
-                            Type = 1,
+                            Group = 0,
+                            Icon = "1",
+                            Name = "Tiền ăn vặt",
+                            Type = 0,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 29,
-                            Group = 1,
-                            Icon = "8",
-                            Name = "Bảo dưỡng xe",
-                            Type = 1,
+                            Group = 0,
+                            Icon = "1",
+                            Name = "Thu nhập khác",
+                            Type = 0,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 30,
-                            Group = 2,
+                            Group = 4,
                             Icon = "1",
-                            Name = "Khám sức khỏe",
+                            Name = "Đầu tư",
                             Type = 1,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 31,
-                            Group = 1,
+                            Group = 4,
                             Icon = "1",
-                            Name = "Thể dục thể thao",
+                            Name = "Nợ",
                             Type = 1,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 32,
-                            Group = 0,
+                            Group = 4,
                             Icon = "1",
-                            Name = "Lương",
-                            Type = 0,
+                            Name = "Cho vay",
+                            Type = 1,
                             WalletId = 1
                         },
                         new
                         {
                             Id = 33,
-                            Group = 0,
-                            Icon = "1",
-                            Name = "Tiền ăn vặt",
-                            Type = 0,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 34,
-                            Group = 0,
-                            Icon = "1",
-                            Name = "Thu nhập khác",
-                            Type = 0,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 35,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Đầu tư",
-                            Type = 1,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 36,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Đi vay",
-                            Type = 2,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 37,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Cho vay",
-                            Type = 4,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 38,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Trả Nợ",
-                            Type = 3,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 39,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Thu Nợ",
-                            Type = 5,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 40,
-                            Group = 3,
-                            Icon = "3",
-                            Name = "Làm đẹp",
-                            Type = 1,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 41,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Quà tặng và quyên góp",
-                            Type = 1,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 42,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Dịch vụ trực tuyến",
-                            Type = 1,
-                            WalletId = 1
-                        },
-                        new
-                        {
-                            Id = 43,
                             Group = 1,
                             Icon = "1",
                             Name = "Ăn uống",
@@ -463,70 +380,70 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 44,
+                            Id = 34,
                             Group = 1,
-                            Icon = "2",
+                            Icon = "1",
                             Name = "Di chuyển",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 45,
+                            Id = 35,
                             Group = 1,
-                            Icon = "3",
+                            Icon = "1",
                             Name = "Thuê nhà",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 46,
+                            Id = 36,
                             Group = 1,
-                            Icon = "4",
+                            Icon = "1",
                             Name = "Hóa đơn điện thoại",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 47,
+                            Id = 37,
                             Group = 1,
-                            Icon = "5",
+                            Icon = "1",
                             Name = "Hóa đơn internet",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 48,
+                            Id = 38,
                             Group = 1,
-                            Icon = "6",
+                            Icon = "1",
                             Name = "Hóa đơn tiện ích khác",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 49,
+                            Id = 39,
                             Group = 2,
-                            Icon = "7",
+                            Icon = "1",
                             Name = "Sửa & trang trí khác",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 50,
+                            Id = 40,
                             Group = 1,
-                            Icon = "8",
+                            Icon = "1",
                             Name = "Bảo dưỡng xe",
                             Type = 1,
                             WalletId = 2
                         },
                         new
                         {
-                            Id = 51,
+                            Id = 41,
                             Group = 2,
                             Icon = "1",
                             Name = "Khám sức khỏe",
@@ -535,7 +452,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 52,
+                            Id = 42,
                             Group = 1,
                             Icon = "1",
                             Name = "Thể dục thể thao",
@@ -544,7 +461,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 53,
+                            Id = 43,
                             Group = 0,
                             Icon = "1",
                             Name = "Lương",
@@ -553,7 +470,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 54,
+                            Id = 44,
                             Group = 0,
                             Icon = "1",
                             Name = "Tiền ăn vặt",
@@ -562,7 +479,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 55,
+                            Id = 45,
                             Group = 0,
                             Icon = "1",
                             Name = "Thu nhập khác",
@@ -571,7 +488,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 56,
+                            Id = 46,
                             Group = 4,
                             Icon = "1",
                             Name = "Đầu tư",
@@ -580,73 +497,163 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 57,
+                            Id = 47,
                             Group = 4,
                             Icon = "1",
-                            Name = "Đi vay",
-                            Type = 2,
+                            Name = "Nợ",
+                            Type = 1,
                             WalletId = 2
+                        },
+                        new
+                        {
+                            Id = 48,
+                            Group = 4,
+                            Icon = "1",
+                            Name = "Cho vay",
+                            Type = 1,
+                            WalletId = 2
+                        },
+                        new
+                        {
+                            Id = 49,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Ăn uống",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 50,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Di chuyển",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 51,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Thuê nhà",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 52,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Hóa đơn điện thoại",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 53,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Hóa đơn internet",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 54,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Hóa đơn tiện ích khác",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 55,
+                            Group = 2,
+                            Icon = "1",
+                            Name = "Sửa & trang trí khác",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 56,
+                            Group = 1,
+                            Icon = "1",
+                            Name = "Bảo dưỡng xe",
+                            Type = 1,
+                            WalletId = 3
+                        },
+                        new
+                        {
+                            Id = 57,
+                            Group = 2,
+                            Icon = "1",
+                            Name = "Khám sức khỏe",
+                            Type = 1,
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 58,
-                            Group = 4,
+                            Group = 1,
                             Icon = "1",
-                            Name = "Cho vay",
-                            Type = 4,
-                            WalletId = 2
+                            Name = "Thể dục thể thao",
+                            Type = 1,
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 59,
-                            Group = 4,
+                            Group = 0,
                             Icon = "1",
-                            Name = "Trả Nợ",
-                            Type = 3,
-                            WalletId = 2
+                            Name = "Lương",
+                            Type = 0,
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 60,
-                            Group = 4,
+                            Group = 0,
                             Icon = "1",
-                            Name = "Thu Nợ",
-                            Type = 5,
-                            WalletId = 2
+                            Name = "Tiền ăn vặt",
+                            Type = 0,
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 61,
-                            Group = 3,
-                            Icon = "3",
-                            Name = "Làm đẹp",
-                            Type = 1,
-                            WalletId = 2
+                            Group = 0,
+                            Icon = "1",
+                            Name = "Thu nhập khác",
+                            Type = 0,
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 62,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Quà tặng và quyên góp",
+                            Group = 4,
+                            Icon = "1",
+                            Name = "Đầu tư",
                             Type = 1,
-                            WalletId = 2
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 63,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Dịch vụ trực tuyến",
+                            Group = 4,
+                            Icon = "1",
+                            Name = "Nợ",
                             Type = 1,
-                            WalletId = 2
+                            WalletId = 3
                         },
                         new
                         {
                             Id = 64,
-                            Group = 1,
+                            Group = 4,
                             Icon = "1",
-                            Name = "Ăn uống",
+                            Name = "Cho vay",
                             Type = 1,
                             WalletId = 3
                         },
@@ -654,186 +661,6 @@ namespace MochiApi.Migrations
                         {
                             Id = 65,
                             Group = 1,
-                            Icon = "2",
-                            Name = "Di chuyển",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 66,
-                            Group = 1,
-                            Icon = "3",
-                            Name = "Thuê nhà",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 67,
-                            Group = 1,
-                            Icon = "4",
-                            Name = "Hóa đơn điện thoại",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 68,
-                            Group = 1,
-                            Icon = "5",
-                            Name = "Hóa đơn internet",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 69,
-                            Group = 1,
-                            Icon = "6",
-                            Name = "Hóa đơn tiện ích khác",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 70,
-                            Group = 2,
-                            Icon = "7",
-                            Name = "Sửa & trang trí khác",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 71,
-                            Group = 1,
-                            Icon = "8",
-                            Name = "Bảo dưỡng xe",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 72,
-                            Group = 2,
-                            Icon = "1",
-                            Name = "Khám sức khỏe",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 73,
-                            Group = 1,
-                            Icon = "1",
-                            Name = "Thể dục thể thao",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 74,
-                            Group = 0,
-                            Icon = "1",
-                            Name = "Lương",
-                            Type = 0,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 75,
-                            Group = 0,
-                            Icon = "1",
-                            Name = "Tiền ăn vặt",
-                            Type = 0,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 76,
-                            Group = 0,
-                            Icon = "1",
-                            Name = "Thu nhập khác",
-                            Type = 0,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 77,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Đầu tư",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 78,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Đi vay",
-                            Type = 2,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 79,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Cho vay",
-                            Type = 4,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 80,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Trả Nợ",
-                            Type = 3,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 81,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Thu Nợ",
-                            Type = 5,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 82,
-                            Group = 3,
-                            Icon = "3",
-                            Name = "Làm đẹp",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 83,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Quà tặng và quyên góp",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 84,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Dịch vụ trực tuyến",
-                            Type = 1,
-                            WalletId = 3
-                        },
-                        new
-                        {
-                            Id = 85,
-                            Group = 1,
                             Icon = "1",
                             Name = "Ăn uống",
                             Type = 1,
@@ -841,70 +668,70 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 86,
+                            Id = 66,
                             Group = 1,
-                            Icon = "2",
+                            Icon = "1",
                             Name = "Di chuyển",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 87,
+                            Id = 67,
                             Group = 1,
-                            Icon = "3",
+                            Icon = "1",
                             Name = "Thuê nhà",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 88,
+                            Id = 68,
                             Group = 1,
-                            Icon = "4",
+                            Icon = "1",
                             Name = "Hóa đơn điện thoại",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 89,
+                            Id = 69,
                             Group = 1,
-                            Icon = "5",
+                            Icon = "1",
                             Name = "Hóa đơn internet",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 90,
+                            Id = 70,
                             Group = 1,
-                            Icon = "6",
+                            Icon = "1",
                             Name = "Hóa đơn tiện ích khác",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 91,
+                            Id = 71,
                             Group = 2,
-                            Icon = "7",
+                            Icon = "1",
                             Name = "Sửa & trang trí khác",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 92,
+                            Id = 72,
                             Group = 1,
-                            Icon = "8",
+                            Icon = "1",
                             Name = "Bảo dưỡng xe",
                             Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 93,
+                            Id = 73,
                             Group = 2,
                             Icon = "1",
                             Name = "Khám sức khỏe",
@@ -913,7 +740,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 94,
+                            Id = 74,
                             Group = 1,
                             Icon = "1",
                             Name = "Thể dục thể thao",
@@ -922,7 +749,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 95,
+                            Id = 75,
                             Group = 0,
                             Icon = "1",
                             Name = "Lương",
@@ -931,7 +758,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 96,
+                            Id = 76,
                             Group = 0,
                             Icon = "1",
                             Name = "Tiền ăn vặt",
@@ -940,7 +767,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 97,
+                            Id = 77,
                             Group = 0,
                             Icon = "1",
                             Name = "Thu nhập khác",
@@ -949,7 +776,7 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 98,
+                            Id = 78,
                             Group = 4,
                             Icon = "1",
                             Name = "Đầu tư",
@@ -958,64 +785,19 @@ namespace MochiApi.Migrations
                         },
                         new
                         {
-                            Id = 99,
+                            Id = 79,
                             Group = 4,
                             Icon = "1",
-                            Name = "Đi vay",
-                            Type = 2,
+                            Name = "Nợ",
+                            Type = 1,
                             WalletId = 4
                         },
                         new
                         {
-                            Id = 100,
+                            Id = 80,
                             Group = 4,
                             Icon = "1",
                             Name = "Cho vay",
-                            Type = 4,
-                            WalletId = 4
-                        },
-                        new
-                        {
-                            Id = 101,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Trả Nợ",
-                            Type = 3,
-                            WalletId = 4
-                        },
-                        new
-                        {
-                            Id = 102,
-                            Group = 4,
-                            Icon = "1",
-                            Name = "Thu Nợ",
-                            Type = 5,
-                            WalletId = 4
-                        },
-                        new
-                        {
-                            Id = 103,
-                            Group = 3,
-                            Icon = "3",
-                            Name = "Làm đẹp",
-                            Type = 1,
-                            WalletId = 4
-                        },
-                        new
-                        {
-                            Id = 104,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Quà tặng và quyên góp",
-                            Type = 1,
-                            WalletId = 4
-                        },
-                        new
-                        {
-                            Id = 105,
-                            Group = 3,
-                            Icon = "4",
-                            Name = "Dịch vụ trực tuyến",
                             Type = 1,
                             WalletId = 4
                         });
@@ -1186,7 +968,9 @@ namespace MochiApi.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("UTC_TIMESTAMP()");
 
                     b.Property<int>("CreatorId")
                         .HasColumnType("int");
@@ -1207,10 +991,6 @@ namespace MochiApi.Migrations
 
                     b.Property<int?>("RelevantTransactionId")
                         .HasColumnType("int");
-
-                    b.Property<string>("UnknownParticipantsStr")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<int>("WalletId")
                         .HasColumnType("int");
