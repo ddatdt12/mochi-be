@@ -7,6 +7,7 @@ using MochiApi.Error;
 using MochiApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static MochiApi.Common.Enum;
 
 namespace MochiApi.Services
 {
@@ -14,6 +15,12 @@ namespace MochiApi.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        private readonly List<CategoryType> PrivateCategoryTypes = new List<CategoryType>() {
+            CategoryType.Debt,
+            CategoryType.Repayment,
+            CategoryType.Loan,
+            CategoryType.DebtCollection
+        };
         public DataContext _context { get; set; }
 
         public CategoryService(IConfiguration configuration, DataContext context, IMapper mapper)
@@ -45,12 +52,16 @@ namespace MochiApi.Services
             {
                 categoryDto.Group = Common.Enum.CategoryGroup.Income;
             }
-            else
+            else if (categoryDto.Type == Common.Enum.CategoryType.Expense)
             {
                 if (categoryDto.Group == Common.Enum.CategoryGroup.Income)
                 {
                     throw new ApiException("Invalid Category", 400);
                 }
+            }
+            else
+            {
+                throw new ApiException("Avaialable options of category type are Income and Expense ", 400);
             }
             categoryDto.WalletId = walletId;
             var category = _mapper.Map<Category>(categoryDto);
@@ -67,18 +78,27 @@ namespace MochiApi.Services
                 throw new ApiException("Category not found", 404);
             }
 
+            if (PrivateCategoryTypes.Contains(category.Type))
+            {
+                throw new ApiException("Private category. Cannot be updated!", 400);
+            }
+
             if (updateCate.Type.HasValue)
             {
                 if (updateCate.Type == Common.Enum.CategoryType.Income)
                 {
                     updateCate.Group = Common.Enum.CategoryGroup.Income;
                 }
-                else
+                else if (updateCate.Type == Common.Enum.CategoryType.Expense)
                 {
                     if (updateCate.Group == Common.Enum.CategoryGroup.Income)
                     {
                         throw new ApiException("Invalid Category", 400);
                     }
+                }
+                else
+                {
+                    throw new ApiException("Avaialable options of category type are Income and Expense ", 400);
                 }
             }
 
@@ -98,6 +118,10 @@ namespace MochiApi.Services
             if (category == null)
             {
                 throw new ApiException("Category not found", 404);
+            }
+            if (PrivateCategoryTypes.Contains(category.Type))
+            {
+                throw new ApiException("Private category. Cannot be deleted!", 400);
             }
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
