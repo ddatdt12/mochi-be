@@ -8,6 +8,7 @@ namespace MochiApi.Dtos
         {
             Note = String.Empty;
             ParticipantIds = new List<int>();
+            UnknownParticipants = new List<string>();
         }
         public int Amount { get; set; }
         [Required]
@@ -18,7 +19,8 @@ namespace MochiApi.Dtos
         [Required]
         public DateTime? CreatedAt { get; set; }
         public List<int> ParticipantIds { get; set; }
-
+        public int? RelevantTransactionId { get; set; }
+        public List<string> UnknownParticipants { get; set; }
         public DateTime CreateAtValue
         {
             get

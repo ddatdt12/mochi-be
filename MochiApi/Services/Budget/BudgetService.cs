@@ -129,18 +129,23 @@ namespace MochiApi.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateSpentAmount(int categoryId, int month, int year, int amount, bool saveChanges = false)
+        public async Task UpdateSpentAmount(int categoryId, int month, int year, bool saveChanges = false)
         {
             var budget = await _context.Budgets.Where(b => b.CategoryId == categoryId && b.Month == month && b.Year == year).FirstOrDefaultAsync();
 
             if (budget != null)
             {
+                var spentInMonth = _context.Transactions.Where(t => t.CategoryId == budget.CategoryId
+                && t.CreatedAt.Month == month && t.CreatedAt.Year == year).Sum(t => t.Amount);
+
                 long beforeSpendAmout = budget.SpentAmount;
-                budget.SpentAmount += amount;
+                budget.SpentAmount = spentInMonth;
+
+                
+                //Check if system should notify user
                 int dayCount = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
                 double dailySpentRecommend = budget.LimitAmount / dayCount;
                 int currentDay = DateTime.Now.Day;
-
                 List<Notification> notisList = new List<Notification>();
                 if (beforeSpendAmout <= budget.LimitAmount && budget.SpentAmount > budget.LimitAmount)
                 {
@@ -280,7 +285,7 @@ namespace MochiApi.Services
             return amountEachDay.Select((v, i) => new BudgetDetailStatistic { Date = new DateTime(year, month, i + 1), ExpenseAmount = v }).ToList();
         }
 
-        async Task IBudgetService.UpdateSpentAmount(int categoryId, int month, int year)
+        public  async Task UpdateSpentAmount(int categoryId, int month, int year)
         {
             var budget = await _context.Budgets.Where(b => b.CategoryId == categoryId && b.Month == month && b.Year == year)
             .FirstOrDefaultAsync();

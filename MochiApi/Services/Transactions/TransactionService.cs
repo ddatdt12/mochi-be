@@ -14,6 +14,22 @@ namespace MochiApi.Services
         private readonly IWalletService _walletService;
         private readonly IEventService _eventService;
         private readonly IMapper _mapper;
+        private readonly List<CategoryType> PrivateCategoryTypes = new List<CategoryType>() {
+            CategoryType.Debt,
+            CategoryType.Repayment,
+            CategoryType.Loan,
+            CategoryType.DebtCollection
+        };
+        private readonly List<CategoryType> MinusCategoryTypes = new List<CategoryType>() {
+            CategoryType.Expense,
+            CategoryType.Repayment,
+            CategoryType.Loan,
+        };
+        private readonly List<CategoryType> PlusCategoryTypes = new List<CategoryType>() {
+            CategoryType.Income,
+            CategoryType.Debt,
+            CategoryType.DebtCollection,
+        };
         public DataContext _context { get; set; }
 
         public TransactionService(IConfiguration configuration, DataContext context, IMapper mapper, IBudgetService budgetService, IWalletService walletService, IEventService eventService)
@@ -87,6 +103,7 @@ namespace MochiApi.Services
             .Include(t => t.Event)
             .Include(t => t.Creator)
             .Include(t => t.Wallet)
+            .Include(t => t.RelevantTransaction)
             .OrderByDescending(t => t.CreatedAt)
             .AsNoTracking();
 
@@ -103,9 +120,62 @@ namespace MochiApi.Services
                 trans.Participants = await _context.Users.AsNoTracking().Where(u => participants.Contains(u.Id)).ToListAsync();
             }
 
+            if (trans!.Category!.Type == CategoryType.Debt || trans.Category.Type == CategoryType.Loan)
+            {
+                trans.ChildAmountSum = await _context.Transactions.Where(t => t.RelevantTransactionId == trans.Id).Select(t => t.Amount).SumAsync();
+            }
             return trans;
         }
 
+
+        private async Task ValidatePrivateTrans(Transaction newTrans, Category? cate = null)
+        {
+            if (cate == null)
+            {
+                cate = await _context.Categories.Where(c => c.Id == newTrans.CategoryId).FirstOrDefaultAsync();
+                if (cate == null)
+                {
+                    throw new ApiException("Category not found", 400);
+                }
+            }
+
+            if (!PrivateCategoryTypes.Contains(cate.Type))
+            {
+                return;
+            }
+
+            Transaction? relevantTrans = null;
+            if (newTrans.RelevantTransactionId.HasValue)
+            {
+                relevantTrans = await _context.Transactions.Where(t => t.Id == newTrans.RelevantTransactionId).Include(t => t.Category).FirstOrDefaultAsync();
+
+                if (relevantTrans == null)
+                {
+                    throw new ApiException("Transaction not found", 400);
+                }
+            }
+            switch (cate.Type)
+            {
+                case CategoryType.Debt:
+                case CategoryType.Loan:
+                    newTrans.RelevantTransactionId = null;
+                    break;
+                case CategoryType.Repayment:
+                    if (relevantTrans != null && relevantTrans.Category!.Type != CategoryType.Debt)
+                    {
+                        throw new ApiException("Only accept dept transaction", 400);
+                    }
+                    break;
+                case CategoryType.DebtCollection:
+                    if (relevantTrans != null && relevantTrans.Category!.Type != CategoryType.Loan)
+                    {
+                        throw new ApiException("Only accept loan transaction", 400);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
         public async Task<Transaction> CreateTransaction(int userId, int walletId, CreateTransactionDto transDto)
         {
             using var transaction = _context.Database.BeginTransaction();
@@ -121,11 +191,19 @@ namespace MochiApi.Services
                     throw new ApiException("Invalid Event", 400);
                 }
 
-                int amount = transDto.Amount;
                 var cate = await _context.Categories.Where(c => c.Id == trans.CategoryId).FirstOrDefaultAsync();
+                if (cate == null)
+                {
+                    throw new ApiException("Category not found", 400);
+                }
+
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                    trans.CreatedAt.Year, trans.Amount, saveChanges: false);
-                if (cate!.Type == Common.Enum.CategoryType.Expense)
+                    trans.CreatedAt.Year);
+
+                await ValidatePrivateTrans(trans, cate);
+
+                int amount = transDto.Amount;
+                if (MinusCategoryTypes.Contains(cate!.Type))
                 {
                     amount *= -1;
                 }
@@ -177,28 +255,37 @@ namespace MochiApi.Services
                     throw new ApiException("Transaction not found!", 400);
                 }
 
+                if (PrivateCategoryTypes.Contains(trans!.Category!.Type) && (trans.CategoryId != updateTransDto.CategoryId || trans.UnknownParticipants != updateTransDto.UnknownParticipants))
+                {
+                    throw new ApiException("Cannot update category and participant of this transaction!", 400);
+                }
+
 
                 if (trans.EventId.HasValue && !await _eventService.CheckEventIsInWallet((int)trans.EventId, trans.WalletId, trans.CreatorId))
                 {
                     throw new ApiException("Invalid Event", 400);
                 }
-
                 if (updateTransDto.CategoryId != trans.CategoryId)
                 {
                     await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-                    updateTransDto.CreateAtValue.Year, updateTransDto.Amount, saveChanges: false);
+                    updateTransDto.CreateAtValue.Year);
 
                     await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                    trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+                    trans.CreatedAt.Year);
 
                     var updatedCate = await _context.Categories.Where(c => c.Id == updateTransDto.CategoryId).FirstOrDefaultAsync();
+                    if (updatedCate == null)
+                    {
+                        throw new ApiException("Category not found", 400);
+                    }
+
                     int amount = trans.Amount;
                     int updatedAmount = updateTransDto.Amount;
-                    if (updatedCate!.Type == Common.Enum.CategoryType.Expense)
+                    if (MinusCategoryTypes.Contains(updatedCate.Type))
                     {
                         updatedAmount *= -1;
                     }
-                    if (trans.Category!.Type == Common.Enum.CategoryType.Income)
+                    if (PlusCategoryTypes.Contains(trans!.Category!.Type))
                     {
                         amount *= -1;
                     }
@@ -207,17 +294,17 @@ namespace MochiApi.Services
                 else if (updateTransDto.Amount != trans.Amount)
                 {
                     await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-            updateTransDto.CreateAtValue.Year, updateTransDto.Amount - trans.Amount, saveChanges: false);
+            updateTransDto.CreateAtValue.Year);
 
                     int amount = updateTransDto.Amount - trans.Amount;
-                    if (trans.Category!.Type == Common.Enum.CategoryType.Expense)
+                    if (MinusCategoryTypes.Contains(trans.Category!.Type))
                     {
                         amount *= -1;
                     }
                     await _walletService.UpdateWalletBalance(walletId, amount);
                 }
                 _mapper.Map(updateTransDto, trans);
-
+                await ValidatePrivateTrans(trans, null);
 
                 var memberIds = await _context.WalletMembers
                 .Where(wM => wM.WalletId == walletId)
@@ -262,10 +349,10 @@ namespace MochiApi.Services
                 }
 
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                    trans.CreatedAt.Year, -1 * trans.Amount, saveChanges: false);
+                    trans.CreatedAt.Year);
 
                 int amount = trans.Amount;
-                if (trans.Category!.Type == Common.Enum.CategoryType.Income)
+                if (PlusCategoryTypes.Contains(trans.Category!.Type))
                 {
                     amount *= -1;
                 }
