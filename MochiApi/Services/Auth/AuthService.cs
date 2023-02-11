@@ -82,7 +82,8 @@ namespace MochiApi.Services
             if (user == null)
             {
                 throw new ApiException("User not found!", 400);
-            } else if(user.Password != userDto.Password)
+            }
+            else if (user.Password != userDto.Password)
             {
                 throw new ApiException("Wrong email or password!", 400);
             }
@@ -118,19 +119,49 @@ namespace MochiApi.Services
         public async Task<(User, string)> VerifyEmailToken(TokenDTO tokenDTO)
         {
             Token token;
+
             if (!ListTokenAccount.TryGetValue(tokenDTO.Email, out token!) || tokenDTO.Code != token.Code || token.ExpiredAt < DateTime.Now)
             {
                 throw new ApiException("Code is wrong or expired!", 400);
             }
-            User user = new User
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                Email = token.User.Email,
-                Password = token.User.Password,
-            };
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            ListTokenAccount.Remove(tokenDTO.Email);
-            return(user,CreateToken(user));
+                User user = new User
+                {
+                    Email = token.User.Email,
+                    Password = token.User.Password,
+                };
+                Wallet wallet = new Wallet
+                {
+                    Balance = 0,
+                    IsDefault = true,
+                    Name = "Cash",
+                    Icon = "1",
+                    Type = Common.Enum.WalletType.Personal
+                };
+
+                await _context.Users.AddAsync(user);
+                await _context.Wallets.AddAsync(wallet);
+                await _context.SaveChangesAsync();
+
+                WalletMember wm = new WalletMember
+                { UserId = user.Id, WalletId = wallet.Id, Status = Common.Enum.MemberStatus.Accepted, Role = Common.Enum.MemberRole.Admin };
+
+                await _context.WalletMembers.AddAsync(wm);
+                await _context.SaveChangesAsync();
+                
+                await transaction.CommitAsync();
+                ListTokenAccount.Remove(tokenDTO.Email);
+                return (user, CreateToken(user));
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+     
         }
 
         public async Task ForgotPassword(string email)
@@ -150,7 +181,7 @@ namespace MochiApi.Services
                 ListForgotPasswordAccount.Remove(email);
             }
             var rePasswordCode = await _mailService.SendResetPasswordMail(email);
-            ListForgotPasswordAccount.Add(email, new Token { Code = rePasswordCode, ExpiredAt = DateTime.Now.AddMinutes(2)});
+            ListForgotPasswordAccount.Add(email, new Token { Code = rePasswordCode, ExpiredAt = DateTime.Now.AddMinutes(2) });
         }
 
         public string VerifyResetPassword(string email, string value)
@@ -190,7 +221,8 @@ namespace MochiApi.Services
             if (user == null)
             {
                 throw new ApiException("User not found.", 400);
-            } else if (user.Password != chUser.Password)
+            }
+            else if (user.Password != chUser.Password)
             {
                 throw new ApiException("Wrong current password!", 400);
             }
