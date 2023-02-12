@@ -292,7 +292,7 @@ namespace MochiApi.Services
 
             if (budget == null)
             {
-                throw new ApiException("Invalid budget", 400);
+                return;
             }
 
             var spentInMonth = _context.Transactions.Where(t => t.CategoryId == budget.CategoryId
