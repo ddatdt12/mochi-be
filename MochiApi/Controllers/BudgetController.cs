@@ -4,6 +4,7 @@ using MochiApi.Attributes;
 using MochiApi.Dtos;
 using MochiApi.DTOs;
 using MochiApi.Error;
+using MochiApi.Helper;
 using MochiApi.Models;
 using MochiApi.Services;
 using System.ComponentModel.DataAnnotations;
@@ -94,7 +95,7 @@ namespace MochiApi.Controllers
 
                 foreach (var transaction in group)
                 {
-                    if (transaction.Category!.Type == Common.Enum.CategoryType.Income)
+                    if (Utils.PlusCategoryTypes.Contains(transaction.Category!.Type))
                     {
                         totalIncome += transaction.Amount;
                         revenue += transaction.Amount;

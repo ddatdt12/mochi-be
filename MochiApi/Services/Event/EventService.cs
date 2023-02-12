@@ -115,7 +115,7 @@ namespace MochiApi.Services
             }
             long amount = await _context.Transactions.AsNoTracking().Include(t => t.Category)
             .Where(t => t.EventId == eventId)
-            .Select(t => t.Category!.Type == CategoryType.Income ? t.Amount : -1 * t.Amount).
+            .Select(t => Utils.PlusCategoryTypes.Contains(t.Category!.Type) ? t.Amount : -1 * t.Amount).
             SumAsync();
             @event.SpentAmount = amount;
         }

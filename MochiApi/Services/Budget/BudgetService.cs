@@ -74,7 +74,7 @@ namespace MochiApi.Services
         {
             var cate = await _context.Categories.Where(c => c.Id == createDto.CategoryId).FirstOrDefaultAsync();
 
-            if (cate == null || cate.Type == Common.Enum.CategoryType.Income)
+            if (cate == null || Utils.PlusCategoryTypes.Contains(cate.Type))
             {
                 throw new ApiException("Invalid category", 400);
             }
@@ -109,7 +109,7 @@ namespace MochiApi.Services
             {
                 var cate = await _context.Categories.Where(c => c.Id == updateDto.CategoryId).FirstOrDefaultAsync();
 
-                if (cate == null || cate.Type == Common.Enum.CategoryType.Income)
+                if (cate == null || Utils.PlusCategoryTypes.Contains(cate.Type))
                 {
                     throw new ApiException("Invalid category", 400);
                 }
