@@ -164,6 +164,10 @@ namespace MochiApi.Services
                     throw new ApiException("Transaction not found", 400);
                 }
             }
+            if (newTrans.UnknownParticipants.Count > 1)
+            {
+                throw new ApiException("Can't import more people ", 400);
+            }
             switch (cate.Type)
             {
                 case CategoryType.Debt:
@@ -171,15 +175,40 @@ namespace MochiApi.Services
                     newTrans.RelevantTransactionId = null;
                     break;
                 case CategoryType.Repayment:
-                    if (relevantTrans != null && relevantTrans.Category!.Type != CategoryType.Debt)
+                    if (relevantTrans != null)
                     {
-                        throw new ApiException("Only accept dept transaction", 400);
+                        if (relevantTrans.Category!.Type != CategoryType.Debt)
+                        {
+                            throw new ApiException("Only accept dept transaction", 400);
+                        }
+
+                        var repaymentedAmountSum = await _context.Transactions.Where(t => t.RelevantTransactionId == relevantTrans.Id && t.Category.Type == CategoryType.Repayment && t.Id != newTrans.Id).Select(t => t.Amount).SumAsync();
+
+                        if (relevantTrans.Amount < repaymentedAmountSum + newTrans.Amount)
+                        {
+                            throw new ApiException("Unable to pay more than the amount owed. Remain: " + (relevantTrans.Amount - repaymentedAmountSum), 400);
+                        }
+
+                        newTrans.UnknownParticipantsStr = relevantTrans.UnknownParticipantsStr;
                     }
+
                     break;
                 case CategoryType.DebtCollection:
-                    if (relevantTrans != null && relevantTrans.Category!.Type != CategoryType.Loan)
+                    if (relevantTrans != null)
                     {
-                        throw new ApiException("Only accept loan transaction", 400);
+                        if (relevantTrans.Category!.Type != CategoryType.Loan)
+                        {
+                            throw new ApiException("Only accept loan transaction! ", 400);
+                        }
+
+                        var debtCollectedSum = await _context.Transactions.Where(t => t.RelevantTransactionId == relevantTrans.Id && t.Category.Type == CategoryType.DebtCollection
+                        && t.Id != newTrans.Id).Select(t => t.Amount).SumAsync();
+
+                        if (relevantTrans.Amount < debtCollectedSum + newTrans.Amount)
+                        {
+                            throw new ApiException("Can't collect an amount greater than the amount you lent! Remain: " + (relevantTrans.Amount - debtCollectedSum), 400);
+                        }
+                        newTrans.UnknownParticipantsStr = relevantTrans.UnknownParticipantsStr;
                     }
                     break;
                 default:
@@ -265,11 +294,10 @@ namespace MochiApi.Services
                     throw new ApiException("Transaction not found!", 400);
                 }
 
-                if (PrivateCategoryTypes.Contains(trans!.Category!.Type) && (trans.CategoryId != updateTransDto.CategoryId || trans.UnknownParticipants != updateTransDto.UnknownParticipants))
+                if (PrivateCategoryTypes.Contains(trans!.Category!.Type) && (trans.CategoryId != updateTransDto.CategoryId || trans.UnknownParticipantsStr != string.Join(";", updateTransDto.UnknownParticipants)))
                 {
                     throw new ApiException("Cannot update category and participant of this transaction!", 400);
                 }
-
 
                 if (trans.EventId.HasValue && !await _eventService.CheckEventIsInWallet((int)trans.EventId, trans.WalletId, trans.CreatorId))
                 {
