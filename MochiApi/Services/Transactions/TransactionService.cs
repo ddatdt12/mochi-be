@@ -138,7 +138,36 @@ namespace MochiApi.Services
             return await _context.Transactions.Where(t => t.RelevantTransactionId == parentTran.Id).ToListAsync();
         }
 
-        private async Task ValidatePrivateTrans(Transaction newTrans, Category? cate = null)
+        private async Task HandleDeletePrivateTrans(Transaction trans)
+        {
+
+            if (trans.Category == null)
+            {
+                return;
+            }
+            Transaction? relevantTrans = null;
+            if (trans.RelevantTransactionId.HasValue)
+            {
+                relevantTrans = await _context.Transactions.Where(t => t.Id == trans.RelevantTransactionId).Include(t => t.Category).FirstOrDefaultAsync();
+
+                if (relevantTrans == null)
+                {
+                    throw new ApiException("Transaction not found", 400);
+                }
+            }
+
+            switch (trans.Category.Type)
+            {
+                case CategoryType.Repayment:
+                case CategoryType.DebtCollection:
+                    if (relevantTrans != null)
+                    {
+                        relevantTrans.AccumulatedAmount -= trans.Amount;
+                    }
+                    break;
+            }
+        }
+        private async Task HandlePrivateTrans(Transaction newTrans, Category? cate = null)
         {
             if (cate == null)
             {
@@ -182,14 +211,13 @@ namespace MochiApi.Services
                             throw new ApiException("Only accept dept transaction", 400);
                         }
 
-                        var repaymentedAmountSum = await _context.Transactions.Where(t => t.RelevantTransactionId == relevantTrans.Id && t.Category.Type == CategoryType.Repayment && t.Id != newTrans.Id).Select(t => t.Amount).SumAsync();
-
-                        if (relevantTrans.Amount < repaymentedAmountSum + newTrans.Amount)
+                        if (relevantTrans.Amount < relevantTrans.AccumulatedAmount + newTrans.Amount)
                         {
-                            throw new ApiException("Unable to pay more than the amount owed. Remain: " + (relevantTrans.Amount - repaymentedAmountSum), 400);
+                            throw new ApiException("Unable to pay more than the amount owed. Remain: " + (relevantTrans.Amount - relevantTrans.AccumulatedAmount), 400);
                         }
 
                         newTrans.UnknownParticipantsStr = relevantTrans.UnknownParticipantsStr;
+                        relevantTrans.AccumulatedAmount += newTrans.Amount;
                     }
 
                     break;
@@ -201,14 +229,12 @@ namespace MochiApi.Services
                             throw new ApiException("Only accept loan transaction! ", 400);
                         }
 
-                        var debtCollectedSum = await _context.Transactions.Where(t => t.RelevantTransactionId == relevantTrans.Id && t.Category.Type == CategoryType.DebtCollection
-                        && t.Id != newTrans.Id).Select(t => t.Amount).SumAsync();
-
-                        if (relevantTrans.Amount < debtCollectedSum + newTrans.Amount)
+                        if (relevantTrans.Amount < relevantTrans.AccumulatedAmount + newTrans.Amount)
                         {
-                            throw new ApiException("Can't collect an amount greater than the amount you lent! Remain: " + (relevantTrans.Amount - debtCollectedSum), 400);
+                            throw new ApiException("Can't collect an amount greater than the amount you lent! Remain: " + (relevantTrans.Amount - relevantTrans.AccumulatedAmount), 400);
                         }
                         newTrans.UnknownParticipantsStr = relevantTrans.UnknownParticipantsStr;
+                        relevantTrans.AccumulatedAmount += newTrans.Amount;
                     }
                     break;
                 default:
@@ -239,7 +265,7 @@ namespace MochiApi.Services
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                     trans.CreatedAt.Year);
 
-                await ValidatePrivateTrans(trans, cate);
+                await HandlePrivateTrans(trans, cate);
 
                 int amount = transDto.Amount;
                 if (MinusCategoryTypes.Contains(cate!.Type))
@@ -267,6 +293,10 @@ namespace MochiApi.Services
                         throw new ApiException("Users " + string.Join(',', invalidUsers) + " not exist!", 400);
                     }
                     trans.ParticipantIds = String.Join(';', transDto.ParticipantIds.Where(id => id != trans.CreatorId).ToList());
+                }
+                else
+                {
+                    trans.ParticipantIds = "";
                 }
 
                 await _context.SaveChangesAsync();
@@ -342,7 +372,7 @@ namespace MochiApi.Services
                     await _walletService.UpdateWalletBalance(walletId, amount);
                 }
                 _mapper.Map(updateTransDto, trans);
-                await ValidatePrivateTrans(trans, null);
+                await HandlePrivateTrans(trans, null);
 
                 var memberIds = await _context.WalletMembers
                 .Where(wM => wM.WalletId == walletId)
@@ -386,6 +416,7 @@ namespace MochiApi.Services
                     throw new ApiException("Invalid Event", 400);
                 }
 
+                await HandleDeletePrivateTrans(trans);
                 await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
                     trans.CreatedAt.Year);
 

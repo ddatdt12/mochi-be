@@ -30,6 +30,7 @@ namespace MochiApi.Models
         public DateTime CreatedAt { get; set; }
         public string? Image { get; set; }
         public int? RelevantTransactionId { get; set; }
+        public int AccumulatedAmount { get; set; }
         public Transaction? RelevantTransaction { get; set; }
         public string UnknownParticipantsStr { get; set; }
         [NotMapped]

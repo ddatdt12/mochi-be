@@ -28,6 +28,7 @@
         public List<string> UnknownParticipants { get; set; }
 
         public List<TransactionDto> ChildTransactions { get; set; }
+        public int AccumulatedAmount { get; set; }
         public long ChildAmountSum { get; set; }
     }
 }
