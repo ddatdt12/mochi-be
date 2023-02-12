@@ -120,11 +120,6 @@ namespace MochiApi.Services
                 trans.Participants = await _context.Users.AsNoTracking().Where(u => participants.Contains(u.Id)).ToListAsync();
             }
 
-            if (trans!.Category!.Type == CategoryType.Debt || trans.Category.Type == CategoryType.Loan)
-            {
-                trans.ChildAmountSum = await _context.Transactions.Where(t => t.RelevantTransactionId == trans.Id).Select(t => t.Amount).SumAsync();
-            }
-
             return trans;
         }
         public async Task<List<Transaction>> GetChildTransactionsOfParentTrans(int id)

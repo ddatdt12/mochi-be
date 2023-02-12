@@ -50,8 +50,6 @@ namespace MochiApi.Models
         public List<User> Participants { get; set; }
         [NotMapped]
         public List<Transaction> ChildTransactions { get; set; }
-        [NotMapped]
-        public long ChildAmountSum{ get; set; }
     }
     public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
     {

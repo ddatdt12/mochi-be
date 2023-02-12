@@ -22,13 +22,11 @@
         public EventDto? Event { get; set; }
         public string? Image { get; set; }
         public List<UserDto> Participants { get; set; }
-
         public int? RelevantTransactionId { get; set; }
         public TransactionDto? RelevantTransaction { get; set; }
         public List<string> UnknownParticipants { get; set; }
-
+        public string UnknownParticipantsStr { get; set; }
         public List<TransactionDto> ChildTransactions { get; set; }
         public int AccumulatedAmount { get; set; }
-        public long ChildAmountSum { get; set; }
     }
 }
