@@ -62,7 +62,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("Month", "Year");
 
-                    b.ToTable("Budget");
+                    b.ToTable("Budget", (string)null);
                 });
 
             modelBuilder.Entity("MochiApi.Models.Category", b =>
@@ -92,7 +92,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("Category");
+                    b.ToTable("Category", (string)null);
 
                     b.HasData(
                         new
@@ -1062,7 +1062,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("Event");
+                    b.ToTable("Event", (string)null);
                 });
 
             modelBuilder.Entity("MochiApi.Models.Invitation", b =>
@@ -1097,7 +1097,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("Invitation");
+                    b.ToTable("Invitation", (string)null);
                 });
 
             modelBuilder.Entity("MochiApi.Models.Notification", b =>
@@ -1146,7 +1146,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("Notification");
+                    b.ToTable("Notification", (string)null);
                 });
 
             modelBuilder.Entity("MochiApi.Models.Settings", b =>
@@ -1170,7 +1170,7 @@ namespace MochiApi.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Settings");
+                    b.ToTable("Settings", (string)null);
                 });
 
             modelBuilder.Entity("MochiApi.Models.Transaction", b =>
@@ -1230,7 +1230,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("MochiApi.Models.User", b =>
@@ -1253,7 +1253,7 @@ namespace MochiApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("User");
+                    b.ToTable("User", (string)null);
 
                     b.HasData(
                         new
@@ -1311,7 +1311,7 @@ namespace MochiApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Wallet");
+                    b.ToTable("Wallet", (string)null);
 
                     b.HasData(
                         new
@@ -1373,7 +1373,7 @@ namespace MochiApi.Migrations
 
                     b.HasIndex("WalletId");
 
-                    b.ToTable("WalletMember");
+                    b.ToTable("WalletMember", (string)null);
 
                     b.HasData(
                         new

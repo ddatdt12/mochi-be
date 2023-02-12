@@ -32,6 +32,7 @@ namespace MochiApi.Models
         public int? RelevantTransactionId { get; set; }
         public int AccumulatedAmount { get; set; }
         public Transaction? RelevantTransaction { get; set; }
+        [Column("varchar(100)")]
         public string UnknownParticipantsStr { get; set; }
         [NotMapped]
         public List<string> UnknownParticipants
@@ -55,6 +56,7 @@ namespace MochiApi.Models
     {
         public void Configure(EntityTypeBuilder<Transaction> builder)
         {
+            builder.HasIndex(t => t.UnknownParticipantsStr);
         }
     }
 }

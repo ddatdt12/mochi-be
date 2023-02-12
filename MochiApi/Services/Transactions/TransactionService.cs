@@ -124,13 +124,20 @@ namespace MochiApi.Services
         }
         public async Task<List<Transaction>> GetChildTransactionsOfParentTrans(int id)
         {
-            var parentTran = await _context.Transactions.Where(t => t.Id == id)
+            var parentTran = await _context.Transactions.Where(t => t.Id == id).Include(t => t.Category)
             .AsNoTracking().FirstOrDefaultAsync();
+            if (parentTran == null)
+            {
+                throw new ApiException("Transation not found", 404);
+            }
+
             if (parentTran!.Category!.Type != CategoryType.Debt && parentTran.Category.Type != CategoryType.Loan)
             {
                 return new List<Transaction>();
             }
-            return await _context.Transactions.Where(t => t.RelevantTransactionId == parentTran.Id).ToListAsync();
+            return await _context.Transactions.Where(t => t.RelevantTransactionId == parentTran.Id)
+            .Include(t => t.Category)
+            .ToListAsync();
         }
 
         private async Task HandleDeletePrivateTrans(Transaction trans)

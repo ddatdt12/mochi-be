@@ -17,11 +17,11 @@ namespace MochiApi.Controllers
     [Protect]
     public class DebtTransactionController : Controller
     {
-        public ITransactionService _transactionService { get; set; }
-        public DataContext _context { get; set; }
-        public ICategoryService _categoryService { get; set; }
-        public IWalletService _walletService { get; set; }
-        public IMapper _mapper { get; set; }
+        private ITransactionService _transactionService { get; set; }
+        private DataContext _context { get; set; }
+        private ICategoryService _categoryService { get; set; }
+        private IWalletService _walletService { get; set; }
+        private IMapper _mapper { get; set; }
         public DebtTransactionController(ITransactionService transactionService, IMapper mapper, IWalletService walletService, ICategoryService categoryService, DataContext context)
         {
             _transactionService = transactionService;
@@ -64,8 +64,27 @@ namespace MochiApi.Controllers
             {
                 throw new ApiException("Only accept Debt or Loan!", 400);
             }
-            var debts = await _context.Transactions.Where(t => t.CreatorId == userId && t.WalletId == walletId && t.Category!.Type == type && t.AccumulatedAmount != t.Amount).ToListAsync();
+            var deptQuery = _context.Transactions.Where(t => t.CreatorId == userId && t.WalletId == walletId
+            && t.Category!.Type == type && t.AccumulatedAmount < t.Amount);
 
+            //if (ParticipantName != null)
+            //{
+            //    deptQuery = deptQuery.Where(t => t.UnknownParticipantsStr == ParticipantName);
+            //}
+
+            //if (IsOver.HasValue)
+            //{
+            //    if (IsOver ?? true)
+            //    {
+            //        deptQuery = deptQuery.Where(t => t.AccumulatedAmount == t.Amount);
+            //    }
+            //    else
+            //    {
+            //        deptQuery = deptQuery.Where(t => t.AccumulatedAmount < t.Amount);
+            //    }
+            //}
+
+            var debts = await deptQuery.ToListAsync();
             var transes = _mapper.Map<List<TransactionDto>>(debts);
             return Ok(new ApiResponse<object>(transes, "Get debts successfully!"));
         }

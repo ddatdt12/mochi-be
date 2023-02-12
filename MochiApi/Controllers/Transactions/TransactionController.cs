@@ -115,7 +115,33 @@ namespace MochiApi.Controllers
             }
             var transList = await _transactionService.GetChildTransactionsOfParentTrans(id);
             var transRes = _mapper.Map<IEnumerable<TransactionDto>>(transList);
-            var response = transRes.GroupBy(tr => tr.CreatedAt.Date).Select(g => new TransactionGroupDateDto { Date = g.Key, Transactions = g.ToList() });
+
+            var groupByDates = transRes.GroupBy(tr => tr.CreatedAt.Date);
+            List<TransactionGroupDateDto> response = new List<TransactionGroupDateDto>();
+            long totalIncome = 0, totalExpense = 0;
+            foreach (var group in groupByDates)
+            {
+                TransactionGroupDateDto item = new TransactionGroupDateDto { Date = group.Key };
+                long revenue = 0;
+
+                foreach (var transaction in group)
+                {
+                    if (Utils.PlusCategoryTypes.Contains(transaction.Category!.Type))
+                    {
+                        totalIncome += transaction.Amount;
+                        revenue += transaction.Amount;
+                    }
+                    else
+                    {
+                        totalExpense += transaction.Amount;
+                        revenue -= transaction.Amount;
+                    }
+                    item.Transactions.Add(transaction);
+                }
+
+                item.Revenue = revenue;
+                response.Add(item);
+            }
 
             return Ok(new ApiResponse<object>(response, "Get child transaction group by date successfully!"));
         }
