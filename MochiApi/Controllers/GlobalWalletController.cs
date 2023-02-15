@@ -108,7 +108,7 @@ namespace MochiApi.Controllers
             var transQuery = _context.Transactions.AsNoTracking().Where(t => t.Wallet!.WalletMembers.Any(wM => wM.UserId == userId && wM.Status == MemberStatus.Accepted)
             && t.CreatedAt >= startDate && t.CreatedAt <= endDate);
 
-            var dailyReportMap = (await transQuery.GroupBy(t => t.CreatedAt.Date).Select(gr =>
+            var dailyReportMap = (await transQuery.Select(t => new {t.CreatedAt, t.Category, t.Amount}).GroupBy(t => t.CreatedAt.Date).Select(gr =>
             new DailyReport
             {
                 Date = gr.Key,
