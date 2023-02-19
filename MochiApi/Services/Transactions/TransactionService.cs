@@ -264,9 +264,7 @@ namespace MochiApi.Services
                     throw new ApiException("Category not found", 400);
                 }
 
-                await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                    trans.CreatedAt.Year);
-
+     
                 await HandlePrivateTrans(trans, cate);
 
                 int amount = transDto.Amount;
@@ -282,6 +280,9 @@ namespace MochiApi.Services
                 {
                     await _eventService.UpdateEventSpent((int)trans.EventId);
                 }
+
+                await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+                trans.CreatedAt.Year);
 
                 if (transDto.ParticipantIds.Count > 0)
                 {
@@ -321,10 +322,13 @@ namespace MochiApi.Services
                 .Where(t => t.Id == transactionId && t.WalletId == walletId)
                 .Include(t => t.Category)
                 .FirstOrDefaultAsync();
+
+
                 if (trans == null)
                 {
                     throw new ApiException("Transaction not found!", 400);
                 }
+
 
                 if (PrivateCategoryTypes.Contains(trans!.Category!.Type) && (trans.CategoryId != updateTransDto.CategoryId || trans.UnknownParticipantsStr != string.Join(";", updateTransDto.UnknownParticipants)))
                 {
@@ -335,44 +339,17 @@ namespace MochiApi.Services
                 {
                     throw new ApiException("Invalid Event", 400);
                 }
-                if (updateTransDto.CategoryId != trans.CategoryId)
+
+
+                var oldTrans = new Transaction
                 {
-                    await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-                    updateTransDto.CreateAtValue.Year);
+                    Id = trans.Id,
+                    Amount = trans.Amount,
+                    CategoryId = trans.CategoryId,
+                    CreatedAt = trans.CreatedAt,
+                    Category = new Category { Id = trans!.Category.Id, Type = trans.Category.Type }
+                };
 
-                    await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                    trans.CreatedAt.Year);
-
-                    var updatedCate = await _context.Categories.Where(c => c.Id == updateTransDto.CategoryId).FirstOrDefaultAsync();
-                    if (updatedCate == null)
-                    {
-                        throw new ApiException("Category not found", 400);
-                    }
-
-                    int amount = trans.Amount;
-                    int updatedAmount = updateTransDto.Amount;
-                    if (MinusCategoryTypes.Contains(updatedCate.Type))
-                    {
-                        updatedAmount *= -1;
-                    }
-                    if (PlusCategoryTypes.Contains(trans!.Category!.Type))
-                    {
-                        amount *= -1;
-                    }
-                    await _walletService.UpdateWalletBalance(walletId, amount + updatedAmount);
-                }
-                else if (updateTransDto.Amount != trans.Amount)
-                {
-                    await _budgetService.UpdateSpentAmount(trans.CategoryId, updateTransDto.CreateAtValue.Month,
-            updateTransDto.CreateAtValue.Year);
-
-                    int amount = updateTransDto.Amount - trans.Amount;
-                    if (MinusCategoryTypes.Contains(trans.Category!.Type))
-                    {
-                        amount *= -1;
-                    }
-                    await _walletService.UpdateWalletBalance(walletId, amount);
-                }
                 _mapper.Map(updateTransDto, trans);
                 await HandlePrivateTrans(trans, null);
 
@@ -388,6 +365,48 @@ namespace MochiApi.Services
                 trans.ParticipantIds = String.Join(';', updateTransDto.ParticipantIds.Where(id => id != trans.CreatorId));
 
                 await _context.SaveChangesAsync();
+
+                //Update budget, event after save
+                if (updateTransDto.CategoryId != oldTrans.CategoryId)
+                {
+                    await _budgetService.UpdateSpentAmount(oldTrans.CategoryId, updateTransDto.CreateAtValue.Month,
+                    updateTransDto.CreateAtValue.Year);
+
+                    await _budgetService.UpdateSpentAmount(oldTrans.CategoryId, oldTrans.CreatedAt.Month,
+                    oldTrans.CreatedAt.Year);
+
+                    var updatedCate = await _context.Categories.Where(c => c.Id == updateTransDto.CategoryId).FirstOrDefaultAsync();
+                    if (updatedCate == null)
+                    {
+                        throw new ApiException("Category not found", 400);
+                    }
+
+                    int amount = oldTrans.Amount;
+                    int updatedAmount = updateTransDto.Amount;
+                    if (MinusCategoryTypes.Contains(updatedCate.Type))
+                    {
+                        updatedAmount *= -1;
+                    }
+                    if (PlusCategoryTypes.Contains(oldTrans!.Category!.Type))
+                    {
+                        amount *= -1;
+                    }
+                    await _walletService.UpdateWalletBalance(walletId, amount + updatedAmount);
+                }
+                else if (updateTransDto.Amount != oldTrans.Amount)
+                {
+                    await _budgetService.UpdateSpentAmount(oldTrans.CategoryId, updateTransDto.CreateAtValue.Month,
+            updateTransDto.CreateAtValue.Year);
+
+                    int amount = updateTransDto.Amount - oldTrans.Amount;
+                    if (MinusCategoryTypes.Contains(oldTrans.Category!.Type))
+                    {
+                        amount *= -1;
+                    }
+                    await _walletService.UpdateWalletBalance(walletId, amount);
+                }
+
+
                 if (trans.EventId.HasValue || updateTransDto.EventId.HasValue)
                 {
                     await _eventService.UpdateEventSpent((int)trans.EventId!);
@@ -419,8 +438,7 @@ namespace MochiApi.Services
                 }
 
                 await HandleDeletePrivateTrans(trans);
-                await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
-                    trans.CreatedAt.Year);
+
 
                 int amount = trans.Amount;
                 if (PlusCategoryTypes.Contains(trans.Category!.Type))
@@ -431,6 +449,9 @@ namespace MochiApi.Services
 
                 _context.Transactions.Remove(trans);
                 await _context.SaveChangesAsync();
+
+                await _budgetService.UpdateSpentAmount(trans.CategoryId, trans.CreatedAt.Month,
+    trans.CreatedAt.Year);
 
                 if (trans.EventId.HasValue)
                 {
